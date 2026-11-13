@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CV Tailor new tailoring</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1D4FD8}a:hover{color:#163BA3}
+</style>
+</helmet>
+<div style="min-height: 1000px; background: #F4F6F9; color: #14181F; font-family: Inter, system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 32px; background: #FFFFFF; border-bottom: 1px solid #D9DEE6">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 28px">
+<a href="Main.dc.html" style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; color: #14181F; text-decoration: none">CV Tailor</a>
+<nav aria-label="Main" style="display: flex; gap: 4px">
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 8px; color: #3A4452; font-weight: 500; text-decoration: none">Applications</a>
+<a href="New.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 8px; background: #E8EEFC; color: #163BA3; font-weight: 600; text-decoration: none">New tailoring</a>
+</nav>
+</div>
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="font-weight: 600">Swastik</span>
+<button type="button" style="min-height: 44px; padding: 0 16px; border: 1px solid #C3CAD5; border-radius: 10px; background: #FFFFFF; color: #14181F; font: inherit; font-weight: 600; cursor: pointer">Sign out</button>
+</div>
+</header>
+
+<main style="max-width: 1180px; margin: 0 auto; padding: 36px 32px 64px; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; line-height: 1.15; font-weight: 700">New tailoring</h1>
+<p style="margin: 0; color: #556070">Pick the CV, add the job description, then run the analysis. Nothing is rewritten until you accept it.</p>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+<section aria-labelledby="cv-h" style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 16px; padding: 24px; background: #FFFFFF; border: 1px solid #D9DEE6; border-radius: 14px">
+<h2 id="cv-h" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700">1. CV</h2>
+<label style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 2px solid #1D4FD8; border-radius: 10px; background: #F3F6FE; cursor: pointer">
+<input type="radio" name="cvsrc" checked style="width: 20px; height: 20px; margin: 2px 0 0; accent-color: #1D4FD8">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Use master CV</span><span style="color: #556070; font-size: 14px">[YOUR_CV_FILENAME].pdf · uploaded [DATE]</span></span>
+</label>
+<label style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 1px solid #C3CAD5; border-radius: 10px; cursor: pointer">
+<input type="radio" name="cvsrc" style="width: 20px; height: 20px; margin: 2px 0 0; accent-color: #1D4FD8">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Upload a different PDF</span><span style="color: #556070; font-size: 14px">Used for this application only</span></span>
+</label>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 16px; border: 1.5px dashed #9AA4B2; border-radius: 10px; text-align: center; color: #556070">
+<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"></path></svg>
+<div><span style="color: #14181F; font-weight: 600">Drop a PDF here</span> or <button type="button" style="min-height: 44px; padding: 0 4px; border: 0; background: none; color: #1D4FD8; font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer">browse</button></div>
+<div style="font-size: 13px">Text-based PDF, up to 5 MB. Scanned image PDFs cannot be read.</div>
+</div>
+</section>
+
+<section aria-labelledby="jd-h" style="flex: 2 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 16px; padding: 24px; background: #FFFFFF; border: 1px solid #D9DEE6; border-radius: 14px">
+<h2 id="jd-h" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700">2. Job description</h2>
+<div role="group" aria-label="Job description source" style="display: flex; gap: 8px; flex-wrap: wrap">
+<button type="button" aria-pressed="{{ textPressed }}" onClick="{{ showText }}" style="min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid {{ textBorder }}; background: {{ textBg }}; color: {{ textColor }}; font: inherit; font-weight: 600; cursor: pointer">Paste text</button>
+<button type="button" aria-pressed="{{ linkPressed }}" onClick="{{ showLink }}" style="min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid {{ linkBorder }}; background: {{ linkBg }}; color: {{ linkColor }}; font: inherit; font-weight: 600; cursor: pointer">Job link</button>
+</div>
+
+<sc-if value="{{ isText }}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="jdtext" style="font-weight: 600">Job description text</label>
+<textarea id="jdtext" rows="12" placeholder="Paste the full posting, including responsibilities and requirements." style="width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid #9AA4B2; border-radius: 10px; font: inherit; color: #14181F; resize: vertical"></textarea>
+<div style="color: #556070; font-size: 13px">Most reliable option. Works for postings behind a login.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLink }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="jdurl" style="font-weight: 600">Job posting URL</label>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<input id="jdurl" type="url" placeholder="https://" style="flex: 1 1 280px; min-width: 0; min-height: 46px; box-sizing: border-box; padding: 0 14px; border: 1px solid #9AA4B2; border-radius: 10px; font: inherit; color: #14181F">
+<button type="button" style="min-height: 46px; padding: 0 18px; border: 1px solid #C3CAD5; border-radius: 10px; background: #FFFFFF; color: #14181F; font: inherit; font-weight: 600; cursor: pointer">Fetch posting</button>
+</div>
+</div>
+<div role="status" style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 10px; background: #FCEFE0; color: #6E3504">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
+<div><span style="font-weight: 600">Could not read this page.</span> LinkedIn and Naukri postings usually need a sign-in. Switch to Paste text and copy the posting in.</div>
+</div>
+</div>
+</sc-if>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="role" style="font-weight: 600">Role title</label>
+<input id="role" type="text" placeholder="Detected from the posting" style="min-height: 46px; box-sizing: border-box; padding: 0 14px; border: 1px solid #9AA4B2; border-radius: 10px; font: inherit; color: #14181F; width: 100%">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="company" style="font-weight: 600">Company</label>
+<input id="company" type="text" placeholder="Detected from the posting" style="min-height: 46px; box-sizing: border-box; padding: 0 14px; border: 1px solid #9AA4B2; border-radius: 10px; font: inherit; color: #14181F; width: 100%">
+</div>
+</div>
+</section>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; background: #FFFFFF; border: 1px solid #D9DEE6; border-radius: 14px">
+<div style="color: #556070; font-size: 14px">Analysis takes about [N] seconds and uses one model call for the JD and one for the CV comparison.</div>
+<a href="Analysis.dc.html" style="display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 10px; background: #1D4FD8; color: #FFFFFF; font-weight: 600; text-decoration: none">Analyse CV against this job
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+</a>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+var isText = ((this.state && this.state.mode) || 'text') === 'text';
+var on = { border: '#14181F', bg: '#14181F', color: '#FFFFFF' };
+var off = { border: '#C3CAD5', bg: '#FFFFFF', color: '#14181F' };
+var t = isText ? on : off;
+var l = isText ? off : on;
+var self = this;
+return {
+isText: isText,
+isLink: !isText,
+textPressed: isText ? 'true' : 'false',
+linkPressed: isText ? 'false' : 'true',
+textBorder: t.border, textBg: t.bg, textColor: t.color,
+linkBorder: l.border, linkBg: l.bg, linkColor: l.color,
+showText: function () { self.setState({ mode: 'text' }); },
+showLink: function () { self.setState({ mode: 'link' }); }
+};
+}
+}
+</script>
+</body>
+</html>

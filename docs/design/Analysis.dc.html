@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CV Tailor score and suggestions</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1D4FD8}a:hover{color:#163BA3}
+</style>
+</helmet>
+<div style="min-height: 1900px; background: #F4F6F9; color: #14181F; font-family: Inter, system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 32px; background: #FFFFFF; border-bottom: 1px solid #D9DEE6">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 28px">
+<a href="Main.dc.html" style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; color: #14181F; text-decoration: none">CV Tailor</a>
+<nav aria-label="Main" style="display: flex; gap: 4px">
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 8px; background: #E8EEFC; color: #163BA3; font-weight: 600; text-decoration: none">Applications</a>
+<a href="New.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 8px; color: #3A4452; font-weight: 500; text-decoration: none">New tailoring</a>
+</nav>
+</div>
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="font-weight: 600">Swastik</span>
+<button type="button" style="min-height: 44px; padding: 0 16px; border: 1px solid #C3CAD5; border-radius: 10px; background: #FFFFFF; color: #14181F; font: inherit; font-weight: 600; cursor: pointer">Sign out</button>
+</div>
+</header>
+
+<main style="max-width: 1180px; margin: 0 auto; padding: 28px 32px 64px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="color: #556070; font-size: 14px"><a href="Main.dc.html" style="font-weight: 600; text-decoration: none">Applications</a> / [Company A]</div>
+<h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 30px; line-height: 1.15; font-weight: 700">Director of Product, Embedded Insurance</h1>
+<div style="color: #556070">Master CV against pasted job description · sample data shown</div>
+</div>
+
+<section aria-label="Score" style="display: flex; flex-wrap: wrap; gap: 32px; padding: 28px; background: #FFFFFF; border: 1px solid #D9DEE6; border-radius: 14px">
+<div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 28px">
+<div style="display: flex; flex-direction: column">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #556070">Current</div>
+<div style="font-family: 'Space Grotesk', sans-serif; font-size: 64px; line-height: 1; font-weight: 700">62</div>
+</div>
+<div style="display: flex; flex-direction: column">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #163BA3">With accepted edits</div>
+<div style="font-family: 'Space Grotesk', sans-serif; font-size: 64px; line-height: 1; font-weight: 700; color: #1D4FD8">{{ projected }}</div>
+</div>
+</div>
+<div role="img" aria-label="{{ meterLabel }}" style="position: relative; height: 14px; border-radius: 999px; background: #E3E7EE; overflow: hidden">
+<div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{ projPct }}; background: #8FAAF0"></div>
+<div style="position: absolute; left: 0; top: 0; bottom: 0; width: 62%; background: #14181F"></div>
+</div>
+<p style="margin: 0; color: #556070; font-size: 14px">Out of 100. Measures how well the CV covers this posting and how safely it parses. It does not predict shortlisting.</p>
+</div>
+
+<div style="flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #556070">Breakdown</h2>
+<sc-for list="{{ cats }}" as="c" hint-placeholder-count="5">
+<div style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.6fr) 64px; gap: 12px; align-items: center">
+<div style="font-weight: 500">{{ c.name }}</div>
+<div aria-hidden="true" style="position: relative; height: 8px; border-radius: 999px; background: #E3E7EE; overflow: hidden">
+<div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{ c.projPct }}; background: #8FAAF0"></div>
+<div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{ c.basePct }}; background: #14181F"></div>
+</div>
+<div style="text-align: right; font-variant-numeric: tabular-nums; color: #3A4452"><span style="font-weight: 700; color: #14181F">{{ c.cur }}</span> / {{ c.max }}</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+<section aria-labelledby="sug-h" style="flex: 2 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+<h2 id="sug-h" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700">Suggestions</h2>
+<div style="color: #556070; font-size: 14px">{{ acceptedCount }} accepted · {{ skippedCount }} skipped · {{ openCount }} open</div>
+</div>
+
+<sc-for list="{{ items }}" as="item" hint-placeholder-count="6">
+<article style="display: flex; flex-direction: column; gap: 14px; padding: 20px 22px; background: #FFFFFF; border: 2px solid {{ item.border }}; border-radius: 14px; opacity: {{ item.opacity }}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+<span style="display: inline-block; padding: 3px 10px; border-radius: 999px; background: {{ item.tagBg }}; color: {{ item.tagColor }}; font-weight: 600; font-size: 13px">{{ item.tag }}</span>
+<span style="color: #556070; font-size: 14px">{{ item.section }}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="font-weight: 600; color: #163BA3">{{ item.status }}</span>
+<span style="font-weight: 700; font-variant-numeric: tabular-nums">+{{ item.pts }}</span>
+</div>
+</div>
+<h3 style="margin: 0; font-size: 17px; font-weight: 600">{{ item.title }}</h3>
+<sc-if value="{{ item.hasBefore }}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 10px; background: #F4F6F9">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #556070">Now</div>
+<div style="color: #3A4452">{{ item.before }}</div>
+</div>
+</sc-if>
+<sc-if value="{{ item.hasAfter }}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 10px; background: #E8EEFC">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #163BA3">Proposed</div>
+<div>{{ item.after }}</div>
+</div>
+</sc-if>
+<sc-if value="{{ item.hasEvidence }}" hint-placeholder-val="{{ true }}">
+<div style="color: #556070; font-size: 14px">{{ item.evidence }}</div>
+</sc-if>
+<sc-if value="{{ item.hasWarn }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 10px; background: #FCEFE0; color: #6E3504; font-size: 14px">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
+<div>{{ item.warn }}</div>
+</div>
+</sc-if>
+<sc-if value="{{ item.needsInput }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="metric-input" style="font-weight: 600">{{ item.inputLabel }}</label>
+<input id="metric-input" type="text" placeholder="{{ item.inputHint }}" style="min-height: 46px; box-sizing: border-box; padding: 0 14px; border: 1px solid #9AA4B2; border-radius: 10px; font: inherit; color: #14181F; width: 100%">
+</div>
+</sc-if>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<button type="button" aria-pressed="{{ item.acceptPressed }}" onClick="{{ item.accept }}" style="min-height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid #1D4FD8; background: {{ item.acceptBg }}; color: {{ item.acceptColor }}; font: inherit; font-weight: 600; cursor: pointer">{{ item.acceptLabel }}</button>
+<button type="button" aria-pressed="{{ item.skipPressed }}" onClick="{{ item.skip }}" style="min-height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid #C3CAD5; background: #FFFFFF; color: #14181F; font: inherit; font-weight: 600; cursor: pointer">{{ item.skipLabel }}</button>
+<button type="button" style="min-height: 44px; padding: 0 18px; border-radius: 10px; border: 0; background: none; color: #1D4FD8; font: inherit; font-weight: 600; cursor: pointer">Edit wording</button>
+</div>
+</article>
+</sc-for>
+</section>
+
+<aside style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+<section aria-labelledby="kw-h" style="display: flex; flex-direction: column; gap: 14px; padding: 22px; background: #FFFFFF; border: 1px solid #D9DEE6; border-radius: 14px">
+<h2 id="kw-h" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700">Job description terms</h2>
+<div style="color: #556070; font-size: 14px">8 of 12 found in your CV</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #163BA3">Found</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<span style="padding: 4px 10px; border-radius: 8px; background: #E8EEFC; color: #163BA3; font-size: 14px; font-weight: 500">product strategy</span>
+<span style="padding: 4px 10px; border-radius: 8px; background: #E8EEFC; color: #163BA3; font-size: 14px; font-weight: 500">insurance distribution</span>
+<span style="padding: 4px 10px; border-radius: 8px; background: #E8EEFC; color: #163BA3; font-size: 14px; font-weight: 500">claims</span>
+<span style="padding: 4px 10px; border-radius: 8px; background: #E8EEFC; color: #163BA3; font-size: 14px; font-weight: 500">analytics</span>
+<span style="padding: 4px 10px; border-radius: 8px; background: #E8EEFC; color: #163BA3; font-size: 14px; font-weight: 500">IRDAI</span>
+<span style="padding: 4px 10px; border-radius: 8px; background: #E8EEFC; color: #163BA3; font-size: 14px; font-weight: 500">team leadership</span>
+<span style="padding: 4px 10px; border-radius: 8px; background: #E8EEFC; color: #163BA3; font-size: 14px; font-weight: 500">stakeholder management</span>
+<span style="padding: 4px 10px; border-radius: 8px; background: #E8EEFC; color: #163BA3; font-size: 14px; font-weight: 500">API integrations</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8A4205">Missing</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<span style="padding: 4px 10px; border-radius: 8px; border: 1px dashed #B5661A; background: #FCEFE0; color: #6E3504; font-size: 14px; font-weight: 500">embedded insurance · fix suggested</span>
+<span style="padding: 4px 10px; border-radius: 8px; border: 1px dashed #B5661A; background: #FCEFE0; color: #6E3504; font-size: 14px; font-weight: 500">P&amp;L ownership · unverified</span>
+<span style="padding: 4px 10px; border-radius: 8px; border: 1px dashed #B5661A; background: #FCEFE0; color: #6E3504; font-size: 14px; font-weight: 500">partner onboarding</span>
+<span style="padding: 4px 10px; border-radius: 8px; border: 1px dashed #B5661A; background: #FCEFE0; color: #6E3504; font-size: 14px; font-weight: 500">pricing</span>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="parse-h" style="display: flex; flex-direction: column; gap: 12px; padding: 22px; background: #FFFFFF; border: 1px solid #D9DEE6; border-radius: 14px">
+<h2 id="parse-h" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700">Parse check</h2>
+<div style="display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid #E7EAF0"><span>Text extracted from PDF</span><span style="font-weight: 600; color: #163BA3">OK</span></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid #E7EAF0"><span>Standard section headings</span><span style="font-weight: 600; color: #163BA3">OK</span></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid #E7EAF0"><span>Single-column layout</span><span style="font-weight: 600; color: #8A4205">Fixed on export</span></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid #E7EAF0"><span>Contact details in body text</span><span style="font-weight: 600; color: #163BA3">OK</span></div>
+<div style="display: flex; justify-content: space-between; gap: 12px"><span>Consistent date format</span><span style="font-weight: 600; color: #8A4205">Fix suggested</span></div>
+<button type="button" style="min-height: 44px; margin-top: 4px; padding: 0 16px; border: 1px solid #C3CAD5; border-radius: 10px; background: #FFFFFF; color: #14181F; font: inherit; font-weight: 600; cursor: pointer">View text as a parser reads it</button>
+</section>
+</aside>
+</div>
+
+<section aria-label="Generate" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; background: #14181F; color: #FFFFFF; border-radius: 14px">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<div style="font-weight: 600; font-size: 17px">{{ acceptedCount }} edits accepted · score {{ projected }}</div>
+<div style="color: #C9D1DC; font-size: 14px">Open and skipped suggestions are left out of the export. You can come back and change them.</div>
+</div>
+<a href="Export.dc.html" style="display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 10px; background: #FFFFFF; color: #14181F; font-weight: 700; text-decoration: none">Generate DOCX
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+</a>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1900}}'>
+class Component extends DCLogic {
+renderVals() {
+var self = this;
+var d = (this.state && this.state.d) || {};
+var BASE = 62;
+var cats = [
+{ key: 'kw', name: 'Keyword coverage', max: 35, base: 20 },
+{ key: 'sum', name: 'Title and summary fit', max: 15, base: 8 },
+{ key: 'ev', name: 'Evidence and impact', max: 20, base: 11 },
+{ key: 'parse', name: 'Parse safety', max: 20, base: 15 },
+{ key: 'hyg', name: 'Hygiene', max: 10, base: 8 }
+];
+var src = [
+{ id: 's1', cat: 'sum', tag: 'Rewrite', section: 'Summary', pts: 5,
+title: 'Name the domain the posting leads with',
+before: 'Product leader with 15 years of experience across fintech, insurtech and consumer tech.',
+after: 'Product leader with 15 years in fintech and insurtech, specialising in embedded insurance distribution and claims platforms.',
+evidence: 'Evidence in your CV: Zopper and Tata Digital roles.' },
+{ id: 's2', cat: 'kw', tag: 'Keyword', section: 'Experience · Zopper', pts: 4,
+title: 'Use the posting\'s term for work you already describe',
+before: 'Own retail and assurance platforms; lead an 8-member product and analytics team.',
+after: 'Own embedded insurance and assurance platforms; lead an 8-member product and analytics team.',
+evidence: 'Evidence in your CV: the same bullet. The posting says "embedded insurance" 5 times.' },
+{ id: 's3', cat: 'ev', tag: 'Quantify', section: 'Experience · Tata Digital', pts: 4,
+title: 'This bullet has no number',
+before: 'Led general insurance on Tata Neu.',
+after: 'Led general insurance on Tata Neu, [YOUR METRIC].',
+needsInput: true, inputLabel: 'Your metric', inputHint: 'For example premium, policies sold or conversion',
+evidence: 'The tool will not invent a figure. Type one you can defend in an interview.' },
+{ id: 's4', cat: 'kw', tag: 'Unverified keyword', section: 'Not in your CV', pts: 6, risky: true,
+title: '"P&L ownership" appears 3 times in the posting',
+warn: 'Nothing in your CV supports this. Accept only if it is true, then say where you held it.',
+acceptText: 'I have this, add it' },
+{ id: 's5', cat: 'parse', tag: 'Format', section: 'Whole document', pts: 5,
+title: 'Two-column layout detected',
+evidence: 'The export uses one column and standard headings so parsers read sections in order.' },
+{ id: 's6', cat: 'hyg', tag: 'Hygiene', section: 'Experience', pts: 2,
+title: 'Dates use mixed formats',
+before: 'Jun 2022 to Mar 2026 · 07/2026 to present',
+after: 'Jun 2022 to Mar 2026 · Jul 2026 to Present',
+evidence: 'One format throughout: MMM YYYY.' }
+];
+var gain = {}; var accepted = 0; var skipped = 0; var total = 0;
+var items = src.map(function (s) {
+var st = d[s.id] || 'open';
+var isA = st === 'accepted'; var isS = st === 'skipped';
+if (isA) { accepted += 1; total += s.pts; gain[s.cat] = (gain[s.cat] || 0) + s.pts; }
+if (isS) { skipped += 1; }
+return {
+id: s.id, tag: s.tag, section: s.section, pts: s.pts, title: s.title,
+before: s.before || '', after: s.after || '', evidence: s.evidence || '', warn: s.warn || '',
+hasBefore: !!s.before, hasAfter: !!s.after, hasEvidence: !!s.evidence, hasWarn: !!s.warn,
+needsInput: !!s.needsInput, inputLabel: s.inputLabel || '', inputHint: s.inputHint || '',
+tagBg: s.risky ? '#FCEFE0' : '#E8EEFC', tagColor: s.risky ? '#6E3504' : '#163BA3',
+border: isA ? '#1D4FD8' : '#D9DEE6', opacity: isS ? '0.6' : '1',
+status: isA ? 'Accepted' : (isS ? 'Skipped' : ''),
+acceptPressed: isA ? 'true' : 'false', skipPressed: isS ? 'true' : 'false',
+acceptBg: isA ? '#FFFFFF' : '#1D4FD8', acceptColor: isA ? '#163BA3' : '#FFFFFF',
+acceptLabel: isA ? 'Accepted · undo' : (s.acceptText || 'Accept'),
+skipLabel: isS ? 'Skipped · undo' : 'Skip',
+accept: function () { var n = Object.assign({}, d); if (isA) { delete n[s.id]; } else { n[s.id] = 'accepted'; } self.setState({ d: n }); },
+skip: function () { var n = Object.assign({}, d); if (isS) { delete n[s.id]; } else { n[s.id] = 'skipped'; } self.setState({ d: n }); }
+};
+});
+var projected = BASE + total;
+return {
+items: items,
+cats: cats.map(function (c) {
+var cur = c.base + (gain[c.key] || 0);
+return { name: c.name, max: c.max, cur: cur, basePct: Math.round(c.base / c.max * 100) + '%', projPct: Math.round(cur / c.max * 100) + '%' };
+}),
+projected: projected,
+projPct: projected + '%',
+meterLabel: 'Current score 62, score with accepted edits ' + projected + ', out of 100',
+acceptedCount: accepted, skippedCount: skipped, openCount: src.length - accepted - skipped
+};
+}
+}
+</script>
+</body>
+</html>
