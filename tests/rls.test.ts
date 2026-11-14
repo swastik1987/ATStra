@@ -17,7 +17,9 @@ if (!enabled) console.warn("[rls.test] .env.test not filled in: database tests s
 
 const opts = { auth: { persistSession: false, autoRefreshToken: false } };
 
-type TestUser = { id: string; email: string; client: SupabaseClient; profileId: string };
+const pdfBlob = () => new Blob(["%PDF-1.4 synthetic"], { type: "application/pdf" });
+
+type TestUser ={ id: string; email: string; client: SupabaseClient; profileId: string };
 
 async function makeUser(admin: SupabaseClient, tag: string): Promise<TestUser> {
   const email = `cvtailor.rlstest.${tag}.${Date.now()}@gmail.com`;
@@ -91,7 +93,7 @@ describe.skipIf(!enabled)("auth and row-level security", () => {
     });
     if (log.error) throw log.error;
 
-    const up = await a.client.storage.from("cvs").upload(cvPath(), new Blob(["%PDF-1.4 synthetic"]), { contentType: "application/pdf" });
+    const up = await a.client.storage.from("cvs").upload(cvPath(), pdfBlob(), { contentType: "application/pdf" });
     if (up.error) throw up.error;
   });
 
@@ -159,8 +161,14 @@ describe.skipIf(!enabled)("auth and row-level security", () => {
     expect(own.error).toBeNull();
     const read = await b.client.storage.from("cvs").download(cvPath());
     expect(read.error).not.toBeNull();
-    const write = await b.client.storage.from("cvs").upload(`${a.profileId}/evil.pdf`, new Blob(["x"]));
+    // A valid PDF, so a rejection here can only come from the ownership policy.
+    const write = await b.client.storage.from("cvs").upload(`${a.profileId}/evil.pdf`, pdfBlob(), { contentType: "application/pdf" });
     expect(write.error).not.toBeNull();
+    expect(write.error?.message ?? "").not.toMatch(/mime/i);
+    // B can write to their own folder, proving the rejection above is about ownership.
+    const ownWrite = await b.client.storage.from("cvs").upload(`${b.profileId}/own.pdf`, pdfBlob(), { contentType: "application/pdf" });
+    expect(ownWrite.error).toBeNull();
+    await admin.storage.from("cvs").remove([`${b.profileId}/own.pdf`]);
     const signed = await b.client.storage.from("cvs").createSignedUrl(cvPath(), 60);
     expect(signed.error).not.toBeNull();
   });
