@@ -5,6 +5,10 @@ import type { LayoutContext } from "@/components/AppLayout";
 import { formatPoints, panel } from "@/components/review/Bits";
 import { sectionLabel } from "@/components/review/SuggestionCard";
 import { useApplication, useSuggestions } from "@/hooks/useApplications";
+import { TemplatePicker } from "@/components/TemplatePicker";
+import { DEFAULT_TEMPLATE, TEMPLATES, getTemplate, type TemplateId } from "@/lib/docx/templates";
+
+const TEMPLATE_KEY = "cv-tailor-template";
 import { downloadExport, fileNameFromPath, useGenerateExport, useLatestExport } from "@/hooks/useExports";
 import { applyEdits, type Suggestion } from "@/lib/applyEdits";
 import { cvText, termFound } from "@/lib/scoring";
@@ -59,6 +63,21 @@ export function Export() {
   const latest = useLatestExport(id);
   const generate = useGenerateExport();
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [template, setTemplate] = useState<TemplateId>(() => {
+    try {
+      return getTemplate(localStorage.getItem(TEMPLATE_KEY)).id;
+    } catch {
+      return DEFAULT_TEMPLATE;
+    }
+  });
+  function chooseTemplate(id: TemplateId) {
+    setTemplate(id);
+    try {
+      localStorage.setItem(TEMPLATE_KEY, id);
+    } catch {
+      // Remembering the choice is a convenience only.
+    }
+  }
 
   const view = useMemo(() => {
     const a = app.data;
@@ -84,7 +103,15 @@ export function Export() {
             : "accepted, but your wording leaves it out";
       return { term: t.term, must: t.importance === "must", why };
     });
-    return { ctx, applied: res.applied, conflicts: res.conflicts, projection, gaps, style: (a.cvs.style as Style | null) ?? DEFAULT_STYLE };
+    return {
+      ctx,
+      applied: res.applied,
+      conflicts: res.conflicts,
+      projection,
+      gaps,
+      preparedCv: res.cv,
+      style: (a.cvs.style as Style | null) ?? DEFAULT_STYLE,
+    };
   }, [app.data, suggestions.data]);
 
   if (app.isLoading || suggestions.isLoading) return <p className="text-muted">Loading…</p>;
@@ -120,6 +147,7 @@ export function Export() {
       suggestions: suggestions.data ?? [],
       pageCount: pages,
       spellingErrors: (a.base_score?.categories.hygiene.detail?.spelling_errors as string[] | undefined) ?? [],
+      template,
     });
   }
 
@@ -145,6 +173,10 @@ export function Export() {
         </div>
       </div>
 
+      <section aria-label="Template" className={panel}>
+        <TemplatePicker cv={view.preparedCv} style={view.style} value={template} onChange={chooseTemplate} />
+      </section>
+
       <section aria-label="Download" className={`${panel} md:flex-row md:items-center md:justify-between gap-6`}>
         <div className="flex flex-wrap items-center gap-8">
           <div className="flex gap-8">
@@ -159,7 +191,10 @@ export function Export() {
           </div>
           <div className="flex flex-col gap-0.5 min-w-0">
             <div className="font-semibold break-all">{fileName ?? "Not generated yet"}</div>
-            <div className="text-sm text-muted">Single column · standard headings · editable in Word or Google Docs</div>
+            <div className="text-sm text-muted">
+              {TEMPLATES[template].name} template · single column · editable in Word or Google Docs
+              {last?.template && !done && last.template !== template && ` · last export used ${getTemplate(last.template).name}`}
+            </div>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">

@@ -5,12 +5,21 @@ import type { Score } from "@/lib/scoring";
 import { exportFileName } from "@/lib/docx/fileName";
 import type { PointsContext } from "../../supabase/functions/_shared/points.ts";
 import type { Style } from "../../supabase/functions/_shared/parseCv.ts";
+import type { TemplateId } from "@/lib/docx/templates";
+
+/** Fetches a bundled font file (public/fonts) for embedding in the DOCX. */
+async function fetchFont(file: string): Promise<Uint8Array> {
+  const res = await fetch(`/fonts/${file}`);
+  if (!res.ok) throw new Error(`Font ${file} not found`);
+  return new Uint8Array(await res.arrayBuffer());
+}
 
 export const DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 export interface ExportRow {
   id: string;
   storage_path: string;
+  template?: string;
   final_score: (Score & { projected: number; diff: number; defect: boolean }) | null;
   applied_suggestion_ids: string[];
   created_at: string;
@@ -23,7 +32,7 @@ export function useLatestExport(applicationId: string | undefined) {
     queryFn: async (): Promise<ExportRow | null> => {
       const { data, error } = await supabase
         .from("exports")
-        .select("id, storage_path, final_score, applied_suggestion_ids, created_at")
+        .select("id, storage_path, template, final_score, applied_suggestion_ids, created_at")
         .eq("application_id", applicationId!)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -70,6 +79,7 @@ export interface ExportInput {
   suggestions: Suggestion[];
   pageCount: number | undefined;
   spellingErrors: string[];
+  template: TemplateId;
 }
 
 /**
@@ -81,14 +91,27 @@ export function useGenerateExport() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: ExportInput) => {
-      const [{ Packer }, { buildCvDocument }, { prepareExport, rescoreExport }] = await Promise.all([
+      const [{ Packer }, { buildCvDocument }, { prepareExport, rescoreExport }, templates] = await Promise.all([
         import("docx"),
         import("@/lib/docx/build"),
         import("@/lib/exportCv"),
+        import("@/lib/docx/templates"),
       ]);
+      const template = templates.getTemplate(input.template);
+      let fonts;
+      try {
+        fonts = await templates.loadTemplateFonts(template, fetchFont);
+      } catch {
+        throw new Error("The template's fonts could not be loaded. Check your connection and try again.");
+      }
       const prepared = prepareExport(input.ctx, input.style, input.suggestions);
       const name = exportFileName(prepared.cv.contact.name, input.roleTitle, input.company);
-      const doc = buildCvDocument(prepared.cv, input.style, { headingLabels: prepared.headingLabels, title: name.replace(/\.docx$/, "") });
+      const doc = buildCvDocument(prepared.cv, input.style, {
+        template,
+        fonts,
+        headingLabels: prepared.headingLabels,
+        title: name.replace(/\.docx$/, ""),
+      });
       const blob = await Packer.toBlob(doc);
       const bytes = new Uint8Array(await blob.arrayBuffer());
       const check = await rescoreExport(bytes, input.ctx, prepared, { pageCount: input.pageCount, spellingErrors: input.spellingErrors });
@@ -102,6 +125,7 @@ export function useGenerateExport() {
       const row = await supabase.from("exports").insert({
         application_id: input.applicationId,
         storage_path: path,
+        template: template.id,
         final_score: { ...check.score, projected: check.projected, diff: check.diff, defect: check.defect },
         applied_suggestion_ids: prepared.applied.map((s) => s.id),
       });

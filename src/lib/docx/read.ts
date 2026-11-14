@@ -32,7 +32,9 @@ export function paragraphsFromXml(xml: string): DocxParagraph[] {
     const runs = [...inner.matchAll(/<w:r(?:\s[^>]*)?>([\s\S]*?)<\/w:r>/g)].map(([, r]) =>
       [...r.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>|<w:tab\/>/g)].map((m) => (m[0] === "<w:tab/>" ? "\t" : decode(m[1] ?? ""))).join(""),
     );
-    out.push({ style, list, runs, text: runs.join("") });
+    const text = runs.join("");
+    // Headings may end with a tab whose leader draws a rule (Terminal template); it is not text.
+    out.push({ style, list, runs, text: style === "Heading1" ? text.replace(/\t+$/, "") : text });
   }
   return out;
 }
@@ -45,7 +47,8 @@ export async function readDocx(bytes: Uint8Array | ArrayBuffer): Promise<DocxPar
 }
 
 function parseContact(line: string): StructuredCv["contact"] {
-  const parts = line.split("|").map((p) => p.trim()).filter(Boolean);
+  // Templates separate contact items with " | " or " · " surrounded by spaces.
+  const parts = line.split(/\s+[|·]\s+/).map((p) => p.trim()).filter(Boolean);
   const email = parts.find((p) => /\S+@\S+\.\S+/.test(p)) ?? "";
   const phone = parts.find((p) => p !== email && (p.match(/\d/g) ?? []).length >= 7) ?? "";
   const links = parts.filter((p) => p !== email && p !== phone && /\w\.\w+\/|^https?:|linkedin|github/i.test(p));
@@ -58,7 +61,8 @@ function splitRole(p: DocxParagraph): { first: string; second: string; third: st
   const dates = tabbed.slice(1);
   const [start = "", end = ""] = dates.split(" – ");
   const middle = p.runs.filter((r) => r !== tabbed).slice(1).join("");
-  const [second = "", third = ""] = middle.replace(/^,\s*/, "").split(" · ");
+  // The template joins title and company with ", ", " · " or " / "; location follows " · ".
+  const [second = "", third = ""] = middle.replace(/^\s*[,·/]\s*/, "").split(" · ");
   return { first: p.runs[0] ?? "", second, third, start, end };
 }
 
@@ -101,7 +105,7 @@ export function structuredFromDocx(paras: DocxParagraph[]): StructuredCv {
         cv.education.push({ degree: r.first, institution: r.second, start: r.start, end: r.end });
       }
     } else if (body.some((p) => p.style === STYLE_IDS.skills)) {
-      cv.skills = body.flatMap((p) => p.text.split(",").map((s) => s.trim()).filter(Boolean));
+      cv.skills = body.flatMap((p) => p.text.split(/,|\s·\s/).map((s) => s.trim()).filter(Boolean));
     } else if (hasLists) {
       cv.other.push({ heading: headingText, items: body.filter((p) => p.list).map((p) => p.text) });
     } else {

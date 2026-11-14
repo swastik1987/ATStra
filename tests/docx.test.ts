@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Packer } from "docx";
 import JSZip from "jszip";
-import { buildCvDocument, headingColour, contrastRatio } from "../src/lib/docx/build.ts";
+import { buildCvDocument } from "../src/lib/docx/build.ts";
 import { normaliseDate } from "../src/lib/docx/dates.ts";
 import { exportFileName } from "../src/lib/docx/fileName.ts";
 import { readDocx, structuredFromDocx } from "../src/lib/docx/read.ts";
@@ -61,71 +61,12 @@ describe("dates", () => {
   });
 });
 
-describe("heading colour", () => {
-  it("uses the accent when it has at least 4.5:1 contrast on white, else black", () => {
-    expect(contrastRatio("#1F3A5F")).toBeGreaterThan(4.5);
-    expect(headingColour("#1F3A5F")).toBe("1F3A5F");
-    expect(headingColour("#9EC5FE")).toBe("000000");
-    expect(headingColour(null)).toBe("000000");
-  });
-});
-
+// Template look and ATS rules per template are tested in templates.test.ts.
 describe("file name", () => {
   it("is <Name>_<Role>_<Company>.docx with safe characters", () => {
     expect(exportFileName("Alex Morgan", "Senior Data Analyst", "Tailwind Freight")).toBe("Alex-Morgan_Senior-Data-Analyst_Tailwind-Freight.docx");
     expect(exportFileName("Zoë O'Neil", "Lead / Principal: Data", "A&B Co.")).toBe("Zoë-ONeil_Lead-Principal-Data_AB-Co.docx");
     expect(exportFileName("", "", "")).toBe("CV.docx");
-  });
-});
-
-describe("DOCX template", () => {
-  it("is single column A4 with 2 cm margins, no header/footer content, tables, text boxes or images", async () => {
-    const { xml } = await build(cvWithOther(), sansStyle);
-    expect(xml.document).toMatch(/<w:pgSz w:w="11906" w:h="16838"/);
-    expect(xml.document).toMatch(/<w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/);
-    expect(xml.document).not.toMatch(/<w:cols w:num="[2-9]"/);
-    expect(xml.document).not.toMatch(/<w:tbl>|<w:txbxContent|<w:drawing|<v:shape|<w:pict/);
-    expect(xml.files.filter((f) => /word\/(header|footer)\d*\.xml/.test(f))).toEqual([]);
-    expect(xml.files.filter((f) => f.startsWith("word/media/"))).toEqual([]);
-  });
-
-  it("uses Calibri at 10.5 pt for a sans CV and real Heading 1 styles in the accent colour", async () => {
-    const { xml } = await build(cvWithOther(), sansStyle);
-    expect(xml.styles).toMatch(/w:ascii="Calibri"/);
-    expect(xml.styles).toMatch(/<w:sz w:val="21"\/>/);
-    expect(xml.styles).toMatch(/w:styleId="Heading1"[\s\S]*?<w:color w:val="1F3A5F"\/>/);
-    const headings = [...xml.document.matchAll(/<w:pStyle w:val="Heading1"\/>/g)];
-    expect(headings).toHaveLength(5);
-  });
-
-  it("a serif, coloured-heading CV exports serif with that colour", async () => {
-    const serif: Style = { ...sansStyle, font_class: "serif", accent_color: "#7A1F2B" };
-    const { xml } = await build(cvWithOther(), serif);
-    expect(xml.styles).toMatch(/w:ascii="Cambria"/);
-    expect(xml.styles).not.toMatch(/w:ascii="Calibri"/);
-    expect(xml.styles).toMatch(/w:styleId="Heading1"[\s\S]*?<w:color w:val="7A1F2B"\/>/);
-  });
-
-  it("makes bullets real Word list items in the original bullet style", async () => {
-    const { xml } = await build(cvWithOther(), { ...sansStyle, bullet_style: "dash" });
-    const listItems = [...xml.document.matchAll(/<w:numPr>/g)];
-    const bullets = fixtureCv().experience.flatMap((r) => r.bullets).length + 1; // + one Certifications item
-    expect(listItems).toHaveLength(bullets);
-    expect(xml.numbering).toMatch(/<w:numFmt w:val="bullet"\/>/);
-    expect(xml.numbering).toMatch(/<w:lvlText w:val="–"\/>/);
-  });
-
-  it("aligns the name block as the original and keeps contact details in the body", async () => {
-    const { xml } = await build(cvWithOther(), { ...sansStyle, name_align: "center" });
-    expect(xml.document).toMatch(/<w:pStyle w:val="Title"\/>[\s\S]{0,200}<w:jc w:val="center"\/>|<w:jc w:val="center"\/>[\s\S]{0,200}<w:pStyle w:val="Title"\/>/);
-    expect(xml.document).toContain("alex@example.com");
-  });
-
-  it("puts dates on the role line after a right tab stop, as MMM YYYY", async () => {
-    const { xml } = await build(cvWithOther(), sansStyle);
-    expect(xml.document).toMatch(/<w:tab w:val="right" w:pos="9638"\/>/);
-    expect(xml.document).toContain("Jun 2018 – Feb 2021");
-    expect(xml.document).toContain("Mar 2021 – Present");
   });
 });
 

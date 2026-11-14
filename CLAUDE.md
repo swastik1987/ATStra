@@ -54,7 +54,7 @@ The Supabase CLI is a dev dependency: run it as `npx supabase …`. In Windows P
 | CV input | PDF upload, single or multi column | The PDF itself is sent to the model so columns are read in the right order |
 | JD input | Pasted text or a job link | Paste is the primary path; link fetch is best-effort with a paste fallback |
 | Output | One editable single-column DOCX | Used for both portal uploads and recruiter emails. No PDF rendering. |
-| Design carry-over | Section order, heading labels, serif or sans font class, heading accent colour, name-block alignment, bullet style | Multi-column originals are exported as a single column. Replicating a multi-column design is out of scope for v1. |
+| Design carry-over | Section order and heading labels from the original CV. Fonts, colours, bullets and name alignment come from the template the user picks (section 9). Changed 2026-11-14 from carrying over font class, accent colour, alignment and bullet style. | Multi-column originals are exported as a single column. Replicating a multi-column design is out of scope for v1. |
 | Hosting | Cloudflare Pages, static build from GitHub | No server code on Cloudflare |
 | Backend | Supabase: Auth, Postgres, Storage, Edge Functions | All secrets and server logic live here |
 | Model | Anthropic API, `MODEL_ID` secret, default `claude-sonnet-5-5` | Also allowed: `claude-haiku-5-5`, `claude-opus-5-5`. Switching needs no code change. |
@@ -107,7 +107,7 @@ Four screens in a straight line, matching `docs/design/`:
 | F12 | Suggestions | Accepting or skipping updates the projected score at once, with no network call. |
 | F13 | Suggestions | A Quantify suggestion needs the user to type the metric before it can be accepted. |
 | F14 | Suggestions | An Unverified keyword suggestion needs the user to confirm they have the experience and say where, before it can be accepted. |
-| F15 | Export | Generate DOCX from the structured CV plus accepted edits. File name `<Name>_<Role>_<Company>.docx`. |
+| F15 | Export | Choose one of five templates (section 9), then generate the DOCX from the structured CV plus accepted edits. File name `<Name>_<Role>_<Company>.docx`. |
 | F16 | Export | Show applied edits and gaps left unaddressed. |
 | F17 | Export | Save the DOCX to Storage against the application; re-download from Applications. |
 | F18 | All | Decisions are saved as they are made. Closing the tab loses nothing. |
@@ -289,14 +289,26 @@ All require a valid Supabase JWT. Error shape: `{ "error": { "code": "", "messag
 
 Built in the browser with the `docx` library from the structured CV, accepted edits and the `style` object. Module: `src/lib/docx/`.
 
-Template rules:
-- Single column, A4, 2 cm margins, 10.5 to 11 pt body.
-- Font from `style.font_class`: sans uses Calibri, serif uses Cambria.
-- Headings in `style.accent_color` if it has at least 4.5:1 contrast on white, else black.
-- Name block aligned per `style.name_align`. Contact details are body paragraphs, never in the Word header or footer.
-- Sections in `style.section_order`, with labels from `style.heading_labels`, using Word's built-in Heading styles. If a label is non-standard (for example "Career Journey"), keep the user's label and record a parse-safety Format suggestion to rename it.
+Templates (changed 2026-11-14). The user picks one of five templates on the Export screen. Definitions live in one module, `src/lib/docx/templates.ts`.
+
+| Template | Fonts (embedded in the DOCX) | Look |
+| --- | --- | --- |
+| Slate (default) | Inter, Inter Light | Light first name, bold surname, tracked capital headings in the accent with a hairline rule |
+| Terminal | Space Grotesk, IBM Plex Sans, IBM Plex Mono | Headings followed by a dotted rule (right tab with dot leader), monospace dates and contact |
+| Axis | Sora, Sora Light, Sora SemiBold | Centred, widely tracked name and headings, short rule under each heading |
+| Band | DM Sans, DM Sans Medium, DM Sans ExtraBold | Name, role and contact on a dark shaded band running to the page edges |
+| Tint | Plus Jakarta Sans, Plus Jakarta Sans ExtraBold | Section headings on light shaded bands |
+
+Font files are static TTFs from Google Fonts (SIL Open Font License, licences in `public/fonts/licenses/`), fetched only when exporting and embedded so Word shows them; Google Docs has them natively.
+
+Template rules (all templates):
+- Single column, A4, 2 cm side margins, 10 to 11 pt body.
+- Fonts, colours, bullet glyph and name alignment come from the template. Section order and heading labels come from the CV's `style` (`section_order`, `heading_labels`).
+- Every text colour has at least 4.5:1 contrast against what it sits on, including text on a shaded band.
+- Contact details are body paragraphs, never in the Word header or footer.
+- Sections use Word's built-in Heading styles. If a label is non-standard (for example "Career Journey"), keep the user's label and record a parse-safety Format suggestion to rename it.
 - Each role: company and title on one line, dates right-aligned with a tab stop, bullets as real Word list items.
-- No tables, text boxes, columns, images, icons or backgrounds.
+- No tables, text boxes, columns, images or icons. Paragraph shading is allowed only for a header band and for section-heading bands; nothing else has a background.
 - Dates as `MMM YYYY`; current role ends with `Present`.
 - Content under `other` is kept, not dropped.
 
