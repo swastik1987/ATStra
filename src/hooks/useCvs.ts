@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AI_CALL } from "@/hooks/useUsage";
 import { supabase } from "@/lib/supabase";
 import { callFunction } from "@/lib/functions";
 import { MAX_PDF_BYTES, extractPdfInBrowser } from "@/lib/pdfText";
@@ -118,6 +119,7 @@ async function parseCv(cvId: string, promote: boolean, onStage: (s: UploadStage)
 export function useUploadCv(profileId: string | undefined, promote: boolean, onStage: (s: UploadStage) => void) {
   const queryClient = useQueryClient();
   return useMutation({
+    meta: AI_CALL,
     mutationFn: async (file: File): Promise<string> => {
       const id = await storeCv(file, profileId, onStage);
       await parseCv(id, promote, onStage);
@@ -133,6 +135,7 @@ export const useUploadMasterCv = (profileId: string | undefined, onStage: (s: Up
 export function useRetryParse(promote: boolean, onStage: (s: UploadStage) => void) {
   const queryClient = useQueryClient();
   return useMutation({
+    meta: AI_CALL,
     mutationFn: (cvId: string) => parseCv(cvId, promote, onStage),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["cv"] }),
   });

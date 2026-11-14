@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { USAGE_KEY } from "@/hooks/useUsage";
 import { AppLayout } from "@/components/AppLayout";
 import { Landing } from "@/pages/Landing";
 import { Applications } from "@/pages/Applications";
@@ -12,7 +13,13 @@ import { Export } from "@/pages/Export";
 // Development-only layout preview with synthetic data; removed from production builds.
 const PhonePreview = import.meta.env.DEV ? lazy(() => import("@/dev/PhonePreview").then((m) => ({ default: m.PhonePreview }))) : null;
 
-const queryClient = new QueryClient({
+const queryClient: QueryClient = new QueryClient({
+  // After any model call (success or failure, both are billed), refresh the header credits.
+  mutationCache: new MutationCache({
+    onSettled: (_d, _e, _v, _c, mutation) => {
+      if (mutation.meta?.aiCall) queryClient.invalidateQueries({ queryKey: USAGE_KEY });
+    },
+  }),
   defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
 });
 

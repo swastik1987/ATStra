@@ -135,6 +135,7 @@ function seededClient(): QueryClient {
   ]);
   client.setQueryData(["applications", "app-1"], app);
   client.setQueryData(["suggestions", "app-1"], suggestions);
+  client.setQueryData(["usage"], { total_credits: 16.9, month_credits: 16.9, calls: 3 });
   client.setQueryData(["exports", "app-1"], exportRow);
   client.setQueryData(["cv", "master"], cvRow);
   client.setQueryData(["cv", "cv-1"], cvRow);

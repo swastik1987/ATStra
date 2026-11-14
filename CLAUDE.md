@@ -94,7 +94,7 @@ Four screens in a straight line, matching `docs/design/`:
 | ID | Screen | Requirement |
 | --- | --- | --- |
 | F1 | Sign-in | "Continue with Google" via Supabase Auth. Any `@gmail.com` account can sign up and sign in; any other email is rejected with a clear message. |
-| F2 | All | Header shows the signed-in user's name and a Sign out button. Each login sees only its own data. |
+| F2 | All | Header shows the signed-in user's name, their approximate cumulative AI credits (section 10) and a Sign out button. Each login sees only its own data. |
 | F3 | Applications | Table: role, company, JD source, score before and after, status, outcome, updated date. Actions: open, download last export. |
 | F4 | Applications | Master CV card: file name, upload date, page count, sections found. Actions: view parsed text, replace PDF. |
 | F5 | New tailoring | PDF upload up to 5 MB. Browser extracts text; under 200 characters means scanned: reject with a clear message and do not save. |
@@ -227,7 +227,8 @@ All tables have row-level security. Ownership flows through `profiles.user_id`.
 | `applications` | `id`, `profile_id`, `cv_id`, `role_title`, `company`, `jd_source` (`text`, `url`), `jd_url`, `jd_text`, `jd_terms` (jsonb), `base_score` (jsonb), `model_id`, `prompt_version`, `status` (`draft`, `reviewing`, `exported`), `outcome` (`not_applied`, `applied`, `no_reply`, `recruiter_call`, `interview`, `offer`, `rejected`; default `not_applied`), `outcome_updated_at`, `created_at`, `updated_at` | `jd_terms` and `base_score` written once by `analyse` |
 | `suggestions` | `id`, `application_id`, `type`, `category`, `section_ref`, `before_text`, `after_text`, `evidence_quote`, `points`, `status` (`open`, `accepted`, `skipped`), `user_text`, `edited_text`, `rank` | `section_ref` is a JSON pointer into `cvs.structured` |
 | `exports` | `id`, `application_id`, `storage_path`, `final_score` (jsonb), `applied_suggestion_ids`, `created_at` | New row per export; old files kept |
-| `usage_log` | `id`, `user_id`, `function_name`, `model_id`, `input_tokens`, `output_tokens`, `prompt_version`, `created_at` | Also used for the daily cap |
+| `usage_log` | `id`, `user_id`, `function_name`, `model_id`, `input_tokens`, `output_tokens`, `prompt_version`, `cost_usd`, `credits`, `created_at` | Also used for the daily cap. `cost_usd` and `credits` are set by a database trigger on insert, never by the client |
+| `model_prices` | `model_id`, `input_usd_per_mtok`, `output_usd_per_mtok`, `updated_at` | List prices; change them with a migration. Read-only to users |
 
 ### Structured CV
 
@@ -330,6 +331,7 @@ Apply logic:
 
 **Cost**
 - One `parse-cv` call per CV, one `analyse` call per application. Token usage logged from phase 0.
+- AI credits (added 2026-11-14): 1 credit = USD 0.01 of model cost at list prices. A trigger prices each `usage_log` row from `model_prices` (an unknown model is charged at the highest listed rate). `my_usage()` returns the caller's total, this month and call count for the header; the `usage_by_user` view gives per-user totals to the project owner only. This is the basis for a later fair-use limit, free allowance or paid plan.
 
 **Failures**
 

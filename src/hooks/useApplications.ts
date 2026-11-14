@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AI_CALL } from "@/hooks/useUsage";
 import { supabase } from "@/lib/supabase";
 import { callFunction } from "@/lib/functions";
 import type { JdTerm, Score } from "@/lib/scoring";
@@ -107,6 +108,7 @@ export function useCreateApplication() {
 export function useAnalyse(applicationId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
+    meta: AI_CALL,
     mutationFn: () => callFunction("analyse", { application_id: applicationId }),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
@@ -138,6 +140,7 @@ export async function persistSuggestion(id: string, patch: Partial<Suggestion>):
 export function useReanalyse(applicationId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
+    meta: AI_CALL,
     mutationFn: () => callFunction("analyse", { application_id: applicationId, force: true }),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
