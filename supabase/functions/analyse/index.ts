@@ -12,6 +12,10 @@ import {
   type ApplicationRow,
   type CvForAnalysis,
 } from "../_shared/analyse.ts";
+import type { Suggestion } from "../_shared/suggestionTypes.ts";
+
+const SUGGESTION_COLUMNS =
+  "id, type, category, section_ref, before_text, after_text, evidence_quote, points, status, user_text, edited_text, rank, term, source, confirmed";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -41,13 +45,13 @@ Deno.serve(async (req) => {
         getApplication: async (id) => {
           const { data } = await supabase
             .from("applications")
-            .select("id, cv_id, role_title, company, jd_text, jd_terms, base_score")
+            .select("id, cv_id, role_title, company, jd_text, jd_terms, base_score, prompt_version")
             .eq("id", id)
             .maybeSingle();
           return data as ApplicationRow | null;
         },
         getCv: async (id) => {
-          const { data } = await supabase.from("cvs").select("structured, parse_checks, raw_text").eq("id", id).maybeSingle();
+          const { data } = await supabase.from("cvs").select("structured, style, parse_checks, raw_text").eq("id", id).maybeSingle();
           return data as CvForAnalysis | null;
         },
         countAnalyseCallsToday: async () => {
@@ -71,6 +75,21 @@ Deno.serve(async (req) => {
             schema: AnalyseOutputSchema,
           });
           return { data: res.data, modelId: res.modelId };
+        },
+        getSuggestions: async (appId) => {
+          const { data } = await supabase.from("suggestions").select(SUGGESTION_COLUMNS).eq("application_id", appId).order("rank");
+          return (data ?? []) as Suggestion[];
+        },
+        replaceSuggestions: async (appId, drafts) => {
+          const del = await supabase.from("suggestions").delete().eq("application_id", appId);
+          if (del.error) throw new Error(`Could not clear old suggestions: ${del.error.message}`);
+          if (!drafts.length) return [];
+          const { data, error } = await supabase
+            .from("suggestions")
+            .insert(drafts.map((d) => ({ ...d, application_id: appId, status: "open", source: "model" })))
+            .select(SUGGESTION_COLUMNS);
+          if (error) throw new Error(`Could not save suggestions: ${error.message}`);
+          return (data as Suggestion[]).sort((a, b) => a.rank - b.rank);
         },
         save: async (id, values) => {
           const { error } = await supabase.from("applications").update(values).eq("id", id);

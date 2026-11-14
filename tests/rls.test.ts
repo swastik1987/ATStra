@@ -173,6 +173,25 @@ describe.skipIf(!enabled)("auth and row-level security", () => {
     expect(signed.error).not.toBeNull();
   });
 
+  it("decisions survive a reload: a fresh session reads back status and the user's text", async () => {
+    const upd = await a.client
+      .from("suggestions")
+      .update({ status: "accepted", user_text: "18%", source: "user", confirmed: true, edited_text: "Edited wording" })
+      .eq("id", ids.suggestion)
+      .select("id");
+    expect(upd.data).toEqual([{ id: ids.suggestion }]);
+    // A brand-new client: nothing cached, as after closing the tab.
+    const { data: session } = await a.client.auth.getSession();
+    const fresh = createClient(URL_!, ANON!, {
+      ...opts,
+      global: { headers: { Authorization: `Bearer ${session.session!.access_token}` } },
+    });
+    const back = await fresh.from("suggestions").select("status, user_text, source, confirmed, edited_text").eq("id", ids.suggestion).single();
+    expect(back.data).toEqual({ status: "accepted", user_text: "18%", source: "user", confirmed: true, edited_text: "Edited wording" });
+    const other = await b.client.from("suggestions").update({ status: "skipped" }).eq("id", ids.suggestion).select("id");
+    expect(other.data ?? []).toEqual([]);
+  });
+
   it("set_master_cv swaps the master atomically, and only for the owner", async () => {
     const second = await a.client
       .from("cvs")

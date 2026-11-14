@@ -11,6 +11,7 @@ import {
 } from "../supabase/functions/_shared/analyse.ts";
 import { ModelError } from "../supabase/functions/_shared/model.ts";
 import type { StructuredCv } from "../supabase/functions/_shared/parseCv.ts";
+import type { DraftSuggestion } from "../supabase/functions/_shared/validate.ts";
 
 const JD = readFileSync("tests/fixtures/jd-senior-data-analyst.txt", "utf8");
 
@@ -37,7 +38,12 @@ const modelOut: AnalyseOutput = {
     { term: "sql", synonyms: [], importance: "nice", is_domain: false },
     { term: "  ", synonyms: [], importance: "nice", is_domain: false },
   ],
-  spelling_errors: ["stakeholders", "Managd", "Snowflake"],
+  spelling_errors: [
+    { word: "stakeholders", correction: "stakeholder" },
+    { word: "Managd", correction: "Managed" },
+    { word: "Snowflake", correction: "Snowfake" },
+  ],
+  suggestions: [],
 };
 
 const app = (over: Partial<ApplicationRow> = {}): ApplicationRow => ({
@@ -52,7 +58,11 @@ const app = (over: Partial<ApplicationRow> = {}): ApplicationRow => ({
 });
 
 function deps(opts: { app?: ApplicationRow | null; calls?: number; out?: AnalyseOutput | Error; bullets?: string[] } = {}) {
-  const log = { model: [] as { system: string; content: { type: string; text?: string }[] }[], saved: [] as Record<string, unknown>[] };
+  const log = {
+    model: [] as { system: string; content: { type: string; text?: string }[] }[],
+    saved: [] as Record<string, unknown>[],
+    stored: [] as DraftSuggestion[][],
+  };
   const cvStructured = structuredClone(structured);
   if (opts.bullets) cvStructured.experience[0].bullets = opts.bullets;
   const d: AnalyseDeps = {
@@ -67,6 +77,11 @@ function deps(opts: { app?: ApplicationRow | null; calls?: number; out?: Analyse
     },
     save: async (_id, values) => {
       log.saved.push(values as Record<string, unknown>);
+    },
+    getSuggestions: async () => [],
+    replaceSuggestions: async (_id, drafts) => {
+      log.stored.push(drafts);
+      return drafts.map((d, i) => ({ ...d, id: `s${i}`, status: "open", user_text: null, edited_text: null, source: "model", confirmed: false }));
     },
   };
   return { d, log };
@@ -140,13 +155,13 @@ describe("runAnalyse result", () => {
       jd_terms: res.jd_terms,
       base_score: res.base_score,
       model_id: "claude-sonnet-5-5",
-      prompt_version: "analyse.v1",
+      prompt_version: "analyse.v3",
       status: "reviewing",
       role_title: "Senior Data Analyst",
       company: "Tailwind Freight",
     });
     expect(res.base_score.total).toBe(Object.values(res.base_score.categories).reduce((n, c) => n + c.score, 0));
-    expect(res.suggestions).toEqual([]);
+    expect(res.suggestions.map((x) => x.type)).toEqual(["hygiene"]);
   });
 
   it("does not overwrite a role or company the user typed", async () => {
@@ -167,5 +182,68 @@ describe("runAnalyse result", () => {
     const forced = deps({ app: stored });
     await runAnalyse(forced.d, { application_id: "app1", force: true });
     expect(forced.log.model).toHaveLength(1);
+  });
+});
+
+describe("runAnalyse suggestions (v2)", () => {
+  const BULLET = "Built Looker dashboards with SQL and dbt";
+
+  it("validates model suggestions before storing them: drops invented facts, keeps supported edits", async () => {
+    const out: AnalyseOutput = {
+      ...modelOut,
+      spelling_errors: [],
+      suggestions: [
+        // Supported keyword: evidence is in the CV.
+        { type: "keyword", section_ref: "/experience/0/bullets/0", before_text: BULLET, after_text: "Built Looker dashboards with SQL, dbt, Snowflake", evidence_quote: "Looker dashboards", term: "Snowflake" },
+        // Invented employer.
+        { type: "rewrite", section_ref: "/experience/0/bullets/0", before_text: BULLET, after_text: "Built Looker dashboards for Contoso with SQL", evidence_quote: "Looker dashboards", term: "" },
+        // False evidence quote.
+        { type: "rewrite", section_ref: "/summary", before_text: structured.summary, after_text: "Logistics data analyst.", evidence_quote: "Ten years at Amazon", term: "" },
+      ],
+    };
+    const { d, log } = deps({ out });
+    const res = await runAnalyse(d, { application_id: "app1" });
+    expect(log.stored).toHaveLength(1);
+    expect(res.suggestions).toHaveLength(1);
+    expect(res.suggestions[0]).toMatchObject({ type: "keyword", term: "Snowflake", rank: 1, category: "keyword_coverage" });
+    expect(res.suggestions[0].points).toBeGreaterThan(0);
+    expect(res.validation?.reasons.sort()).toEqual(["evidence_not_in_cv", "new_entity"]);
+  });
+
+  it("generates Format suggestions from failing parse checks and Hygiene for mixed dates, in code", async () => {
+    const { d } = deps();
+    const failing = {
+      page_count: 1,
+      checks: {
+        text_extractable: { pass: true, label: "" },
+        single_column: { pass: false, label: "" },
+        standard_headings: { pass: false, label: "", nonstandard: ["Career Journey"] },
+        header_footer_clear: { pass: true, label: "" },
+        no_tables_or_text_boxes: { pass: true, label: "" },
+      },
+    };
+    const cvRow = {
+      structured: { ...structuredClone(structured), experience: [{ ...structured.experience[0], start: "03/2021" }, { ...structured.experience[0], start: "Jan 2019", end: "Feb 2021" }] },
+      style: { section_order: ["experience"], heading_labels: { experience: "Career Journey" }, font_class: "sans" as const, accent_color: null, name_align: "left" as const, bullet_style: "disc", source_columns: 2 },
+      parse_checks: failing,
+      raw_text: "text",
+    };
+    d.getCv = async () => cvRow;
+    const res = await runAnalyse(d, { application_id: "app1" });
+    const refs = res.suggestions.map((s) => s.section_ref).sort();
+    expect(refs).toEqual(["/_format/dates", "/_format/single_column", "/_style/heading_labels/experience"].concat(
+      res.suggestions.filter((s) => s.type === "hygiene" && !s.section_ref.startsWith("/_")).map((s) => s.section_ref),
+    ).sort());
+    const heading = res.suggestions.find((s) => s.section_ref === "/_style/heading_labels/experience");
+    expect(heading).toMatchObject({ type: "format", before_text: "Career Journey", after_text: "Experience", points: 4 });
+  });
+
+  it("idempotent calls return the stored suggestions", async () => {
+    const { d } = deps({ app: app({ jd_terms: [], base_score: { total: 1, categories: {} } as never, prompt_version: "analyse.v3" }) });
+    const stored = [{ id: "x" }] as never;
+    d.getSuggestions = async () => stored;
+    const res = await runAnalyse(d, { application_id: "app1" });
+    expect(res.suggestions).toBe(stored);
+    expect(res.prompt_version).toBe("analyse.v3");
   });
 });

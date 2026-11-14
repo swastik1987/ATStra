@@ -65,7 +65,8 @@ function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
 }
 
-function phrasePattern(phrases: string[]): RegExp | null {
+/** Whole-word, case-insensitive pattern for a term and its synonyms (optional plural). */
+export function phrasePattern(phrases: string[]): RegExp | null {
   const alts = [...new Set(phrases.map((p) => normaliseForMatch(p)).filter(Boolean))]
     .sort((a, b) => b.length - a.length)
     .map((p) => escapeRe(p).replace(/\\? /g, "\\s+"));
@@ -192,7 +193,7 @@ function titleSummary(cv: StructuredCv, terms: JdTerm[], roleTitle: string): Cat
 const NUMBER_WORDS =
   /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|hundred|hundreds|thousand|thousands|million|millions|billion|half|double|triple|tenfold)\b/i;
 const OUTCOME =
-  /\b(increased|increasing|reduced|reducing|cut|cutting|saved|saving|grew|growing|improved|improving|boosted|lowered|raised|doubled|tripled|halved|accelerated|decreased|generated|achieved|exceeded|drove|won|secured|expanded|shortened|eliminated|prevented|recovered|delivered|lifted|added)\b|\bresulting in\b|\bleading to\b|\bfrom\b.+\bto\b/i;
+  /\b(?:increas(?:ed|ing)|reduc(?:ed|ing)|cut|cutting|sav(?:ed|ing)|grew|grow(?:ing|n)|improv(?:ed|ing)|boost(?:ed|ing)|lower(?:ed|ing)|rais(?:ed|ing)|doubl(?:ed|ing)|tripl(?:ed|ing)|halv(?:ed|ing)|accelerat(?:ed|ing)|decreas(?:ed|ing)|generat(?:ed|ing)|achiev(?:ed|ing)|exceed(?:ed|ing)|drove|driving|won|winning|secur(?:ed|ing)|expand(?:ed|ing)|shorten(?:ed|ing)|eliminat(?:ed|ing)|prevent(?:ed|ing)|recover(?:ed|ing)|deliver(?:ed|ing)|lift(?:ed|ing)|add(?:ed|ing)|freeing|freed|recouped|worth)\b|\bresulting in\b|\bleading to\b|\bfrom\b.+\bto\b/i;
 
 /** A bullet carries a number (digit, %, currency or number word) and an outcome. */
 export function isQuantified(bullet: string): boolean {

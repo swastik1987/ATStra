@@ -148,6 +148,11 @@ describe("evidence and impact (20)", () => {
     expect(isQuantified("Built the weekly dashboard used by 40 managers")).toBe(false);
     expect(isQuantified("Improved onboarding for new starters")).toBe(false);
     expect(isQuantified("Owned the delivery report")).toBe(false);
+    expect(isQuantified("Led a pricing analysis, adding 4% margin on rural routes")).toBe(true);
+    expect(isQuantified("Automated scorecards in Python, saving 6 hours a week")).toBe(true);
+    expect(isQuantified("Planned 12 delivery routes")).toBe(false);
+    expect(isQuantified("Led a pricing analysis for rural routes, worth £40k a year")).toBe(true);
+    expect(isQuantified("Built the delivery dashboard for 40 managers")).toBe(false);
   });
 
   it("uses only the two most recent roles: round(20 * quantified / total)", () => {

@@ -10,14 +10,18 @@ import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import { extractPdfText } from "../src/lib/pdfText.ts";
-import { scoreCv } from "../src/lib/scoring.ts";
+import { cvText, scoreCv } from "../src/lib/scoring.ts";
+import { normaliseForMatch } from "../src/lib/pdfText.ts";
+import { getAt } from "../supabase/functions/_shared/pointer.ts";
+import type { StructuredCv } from "../supabase/functions/_shared/parseCv.ts";
 
 config({ path: ".env.test", quiet: true });
 const URL_ = process.env.SUPABASE_URL;
 const ANON = process.env.SUPABASE_ANON_KEY;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const enabled = process.env.RUN_LIVE_MODEL_TESTS === "1" && Boolean(URL_ && ANON && SERVICE);
-const FORCED_RUNS = 2;
+// Extra forced analyses to measure drift; costs one model call each. Set LIVE_FORCED_RUNS to enable.
+const FORCED_RUNS = Number(process.env.LIVE_FORCED_RUNS ?? 0);
 const opts = { auth: { persistSession: false, autoRefreshToken: false } };
 
 async function invoke(client: SupabaseClient, name: string, body: Record<string, unknown>) {
@@ -98,6 +102,7 @@ describe.skipIf(!enabled)("analyse acceptance (live model)", () => {
     expect(stored.data!.role_title).toBeTruthy();
     expect(stored.data!.company).toBeTruthy();
     runs.push({ total: results[0].base_score.total, terms: results[0].jd_terms });
+    console.log("[analyse.live] validation:", JSON.stringify(results[0].validation, null, 1));
     console.log(`[analyse.live] base score ${results[0].base_score.total}`, JSON.stringify(results[0].base_score.categories));
   }, 180_000);
 
@@ -115,7 +120,28 @@ describe.skipIf(!enabled)("analyse acceptance (live model)", () => {
     expect(rescored).toEqual(app.data!.base_score);
   });
 
-  it(`measures score drift across ${FORCED_RUNS} forced re-extractions (reported, not asserted)`, async () => {
+  it("stores only suggestions that pass validation, ranked, with points from code", async () => {
+    const { data: rows } = await user.from("suggestions").select("*").eq("application_id", appId).order("rank");
+    const app = await user.from("applications").select("jd_terms, cvs(structured)").eq("id", appId).single();
+    const cv = (app.data!.cvs as unknown as { structured: StructuredCv }).structured;
+    const cvNorm = normaliseForMatch(cvText(cv));
+    const cvNumbers = new Set(cvText(cv).match(/d+(?:[.,]d+)*/g) ?? []);
+    console.log(`[analyse.live] ${rows!.length} suggestions:`, JSON.stringify(rows!.map((r) => ({ rank: r.rank, type: r.type, points: r.points, ref: r.section_ref, before: r.before_text, after: r.after_text, evidence: r.evidence_quote, term: r.term })), null, 1));
+    expect(rows!.length).toBeLessThanOrEqual(12);
+    expect(rows!.map((r) => r.rank)).toEqual(rows!.map((_, i) => i + 1));
+    for (const r of rows!) {
+      if (r.type === "rewrite" || r.type === "keyword") expect(cvNorm, r.evidence_quote).toContain(normaliseForMatch(r.evidence_quote));
+      if (r.type === "rewrite" || r.type === "keyword" || r.type === "quantify") {
+        const target = getAt(cv, r.section_ref);
+        if (typeof target === "string") expect(normaliseForMatch(target)).toBe(normaliseForMatch(r.before_text));
+        for (const n of (r.after_text.match(/d+(?:[.,]d+)*/g) ?? [])) expect(cvNumbers.has(n) || r.before_text.includes(n), `${n} in ${r.after_text}`).toBe(true);
+        expect(r.after_text.replace("[metric]", "10%").length).toBeLessThanOrEqual(Math.ceil(r.before_text.length * 1.3) || 160);
+      }
+      if (r.type === "quantify") expect(r.after_text.split("[metric]").length - 1).toBe(1);
+    }
+  });
+
+  it.skipIf(FORCED_RUNS === 0)(`measures score drift across ${FORCED_RUNS} forced re-extractions (reported, not asserted)`, async () => {
     for (let i = 0; i < FORCED_RUNS; i++) {
       const r = await invoke(user, "analyse", { application_id: appId, force: true });
       runs.push({ total: r.base_score.total, terms: r.jd_terms });

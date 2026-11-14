@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { callFunction } from "@/lib/functions";
 import type { JdTerm, Score } from "@/lib/scoring";
 import type { CvRecord } from "@/hooks/useCvs";
+import type { Suggestion } from "@/lib/applyEdits";
 
 export type Outcome = "not_applied" | "applied" | "no_reply" | "recruiter_call" | "interview" | "offer" | "rejected";
 export type Status = "draft" | "reviewing" | "exported";
@@ -23,6 +24,7 @@ export interface ApplicationDetail extends ApplicationSummary {
   jd_url: string | null;
   jd_text: string | null;
   jd_terms: JdTerm[] | null;
+  prompt_version: string | null;
   cvs: Pick<CvRecord, "id" | "file_name" | "structured" | "parse_checks" | "is_master"> | null;
 }
 
@@ -48,7 +50,7 @@ export function useApplication(id: string | undefined) {
       const { data, error } = await supabase
         .from("applications")
         .select(
-          "id, role_title, company, jd_source, jd_url, jd_text, jd_terms, base_score, status, outcome, updated_at, cv_id, cvs(id, file_name, structured, parse_checks, is_master)",
+          "id, role_title, company, jd_source, jd_url, jd_text, jd_terms, base_score, status, outcome, updated_at, prompt_version, cv_id, cvs(id, file_name, structured, parse_checks, is_master)",
         )
         .eq("id", id!)
         .single();
@@ -99,6 +101,40 @@ export function useAnalyse(applicationId: string | undefined) {
   return useMutation({
     mutationFn: () => callFunction("analyse", { application_id: applicationId }),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+  });
+}
+
+const SUGGESTION_COLUMNS =
+  "id, type, category, section_ref, before_text, after_text, evidence_quote, points, status, user_text, edited_text, rank, term, source, confirmed";
+
+export function useSuggestions(applicationId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ["suggestions", applicationId],
+    enabled: Boolean(applicationId) && enabled,
+    // Loaded once per visit; local state owns decisions after that (F12).
+    staleTime: Infinity,
+    queryFn: async (): Promise<Suggestion[]> => {
+      const { data, error } = await supabase.from("suggestions").select(SUGGESTION_COLUMNS).eq("application_id", applicationId!).order("rank");
+      if (error) throw error;
+      return (data ?? []).map((s) => ({ ...s, points: Number(s.points) })) as Suggestion[];
+    },
+  });
+}
+
+/** Saves one decision straight to the suggestions table (F18). */
+export async function persistSuggestion(id: string, patch: Partial<Suggestion>): Promise<void> {
+  const { error } = await supabase.from("suggestions").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+export function useReanalyse(applicationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => callFunction("analyse", { application_id: applicationId, force: true }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.removeQueries({ queryKey: ["suggestions", applicationId] });
+    },
   });
 }
 
