@@ -193,7 +193,7 @@ Text the user types for Quantify and Unverified keyword is stored with `source =
 | Database | Supabase Postgres with row-level security | Section 7 |
 | Files | Supabase Storage, private buckets `cvs` and `exports` | Signed URLs, 60-second expiry |
 | Server logic | Supabase Edge Functions (Deno) | `parse-cv`, `fetch-jd`, `analyse` |
-| Model | Anthropic API via `_shared/model.ts` | Structured output through a forced tool call with a JSON schema, validated with `zod` |
+| Model | Anthropic API via `_shared/model.ts` | Structured output through the API's structured outputs (`output_config.format`, JSON schema from `zod`), re-validated with `zod`. A forced tool call is not used: `tool_choice` `tool`/`any` returns HTTP 400 on the allowed models. |
 
 ### Request path for one tailoring
 
@@ -208,7 +208,7 @@ Text the user types for Quantify and Unverified keyword is stored with `source =
 ### Model client (`_shared/model.ts`)
 
 - Reads `ANTHROPIC_API_KEY` and `MODEL_ID` from secrets. Default `claude-sonnet-5-5`.
-- Exposes one function: `callStructured({ system, content, tool, schema })` returning validated JSON plus token usage.
+- Exposes one function: `callStructured({ functionName, promptVersion, system, content, name, schema })` returning validated JSON plus token usage.
 - One retry on schema failure, then error `schema_invalid`.
 - Writes a `usage_log` row per call: function name, model id, input and output tokens, prompt version.
 - Prompts live in versioned files under `supabase/functions/_shared/prompts/`.
@@ -374,9 +374,9 @@ tests/fixtures/                  synthetic CVs and JDs only
 
 ---
 
-## 13. Open question
+## 13. Open question (answered)
 
-- Does the second user's field need different section labels or rubric weights from the defaults? Ask me before phase 0.
+- Different section labels or rubric weights per user? No: every user gets the default labels and the single weights config (answered 2026-11-13).
 
 ## 14. Known risks (context, not tasks)
 

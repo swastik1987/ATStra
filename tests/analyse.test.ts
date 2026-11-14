@@ -247,3 +247,20 @@ describe("runAnalyse suggestions (v2)", () => {
     expect(res.prompt_version).toBe("analyse.v3");
   });
 });
+
+describe("failure logging (section 10)", () => {
+  it("logs the failure code and prompt version when validation fails twice or the model errors", async () => {
+    for (const [err, code] of [
+      [new ModelError("schema_invalid", "bad"), "schema_invalid"],
+      [new Error("timeout"), "model_error"],
+    ] as const) {
+      const { d } = deps({ out: err });
+      const logged: unknown[][] = [];
+      d.logFailure = async (...args) => {
+        logged.push(args);
+      };
+      await expect(runAnalyse(d, { application_id: "app1" })).rejects.toMatchObject({ code, message: "Analysis failed. Try again." });
+      expect(logged).toEqual([[code, "analyse.v3", expect.any(String)]]);
+    }
+  });
+});

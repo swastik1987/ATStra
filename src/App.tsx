@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -7,6 +8,9 @@ import { CvText } from "@/pages/CvText";
 import { NewTailoring } from "@/pages/NewTailoring";
 import { Analysis } from "@/pages/Analysis";
 import { Export } from "@/pages/Export";
+
+// Development-only layout preview with synthetic data; removed from production builds.
+const PhonePreview = import.meta.env.DEV ? lazy(() => import("@/dev/PhonePreview").then((m) => ({ default: m.PhonePreview }))) : null;
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
@@ -18,6 +22,16 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/signin" element={<SignIn />} />
+          {PhonePreview && (
+            <Route
+              path="/__preview/*"
+              element={
+                <Suspense fallback={null}>
+                  <PhonePreview />
+                </Suspense>
+              }
+            />
+          )}
           <Route element={<AppLayout />}>
             <Route index element={<Applications />} />
             <Route path="/cv/:id" element={<CvText />} />

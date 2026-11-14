@@ -84,6 +84,8 @@ export interface AnalyseDeps {
   /** Deletes the application's suggestions and stores these. Returns the stored rows. */
   replaceSuggestions(applicationId: string, drafts: DraftSuggestion[]): Promise<Suggestion[]>;
   save(id: string, values: Record<string, unknown>): Promise<void>;
+  /** Section 10: a failed analysis is logged with its code and prompt version. */
+  logFailure?(code: AnalyseErrorCode, promptVersion: string, detail: string): Promise<void>;
 }
 
 export interface AnalyseResult {
@@ -248,8 +250,9 @@ export async function runAnalyse(deps: AnalyseDeps, input: { application_id: str
       ],
     }));
   } catch (e) {
-    if (e instanceof ModelError && e.code === "schema_invalid") throw new AnalyseError("schema_invalid", "Analysis failed. Try again.");
-    throw new AnalyseError("model_error", "Analysis failed. Try again.");
+    const code: AnalyseErrorCode = e instanceof ModelError && e.code === "schema_invalid" ? "schema_invalid" : "model_error";
+    await deps.logFailure?.(code, PROMPT_VERSION, e instanceof Error ? e.message : String(e)).catch(() => {});
+    throw new AnalyseError(code, "Analysis failed. Try again.");
   }
 
   const text = cvText(cv.structured);

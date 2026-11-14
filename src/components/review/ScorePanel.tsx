@@ -32,7 +32,7 @@ export function ScorePanel({ score, projected }: { score: Score; projected: Scor
           const cur = score.categories[c]?.score ?? 0;
           const next = projected.categories[c]?.score ?? 0;
           return (
-            <div key={c} className="grid grid-cols-[minmax(0,10rem)_1fr_auto] items-center gap-3">
+            <div key={c} className="grid grid-cols-[minmax(0,10rem)_minmax(3rem,1fr)_auto] items-center gap-3">
               <div className="text-sm font-medium">{CATEGORY_LABELS[c]}</div>
               <Bar value={next} max={WEIGHTS[c]} />
               <div className="text-sm tabular-nums whitespace-nowrap">

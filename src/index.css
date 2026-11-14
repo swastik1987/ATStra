@@ -22,23 +22,30 @@
   --radius-card: 14px;
 }
 
-html,
-body {
-  background: var(--color-page);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.5;
-}
+/* Base styles live in the base layer so utility classes (e.g. text-white on a link styled
+   as a primary button) always win over them. */
+@layer base {
+  /* The root stays at 16px so rem-based sizes (min-h-11 = 44px controls) hold. */
+  html {
+    background: var(--color-page);
+  }
+  body {
+    background: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+  }
 
-a {
-  color: var(--color-accent);
-}
-a:hover {
-  color: var(--color-accent-ink);
-}
+  a {
+    color: var(--color-accent);
+  }
+  a:hover {
+    color: var(--color-accent-ink);
+  }
 
-:focus-visible {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 2px;
+  :focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 }

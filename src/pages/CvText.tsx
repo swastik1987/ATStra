@@ -1,5 +1,6 @@
-import { Link, useParams } from "react-router-dom";
-import { useCv } from "@/hooks/useCvs";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useCv, useDeleteCv } from "@/hooks/useCvs";
 import type { Check } from "../../supabase/functions/_shared/parseCv.ts";
 
 const CHECK_ORDER = [
@@ -27,9 +28,18 @@ function StatusLabel({ pass }: { pass: boolean }) {
 export function CvText() {
   const { id } = useParams();
   const cv = useCv(id);
+  const del = useDeleteCv();
+  const navigate = useNavigate();
 
   if (cv.isLoading) return <p className="text-muted">Loading…</p>;
   if (cv.error || !cv.data) return <p role="alert">This CV could not be found.</p>;
+
+  function onDelete() {
+    const msg = cv.data!.is_master
+      ? "Delete your master CV? The PDF and its extracted text are removed. Applications keep their scores and exported files, but cannot be analysed again. This cannot be undone."
+      : "Delete this CV? The PDF and its extracted text are removed. This cannot be undone.";
+    if (window.confirm(msg)) del.mutate(cv.data!.id, { onSuccess: () => navigate("/") });
+  }
 
   const { file_name, raw_text, structured, style, parse_checks } = cv.data;
   const checks = parse_checks?.checks as Record<string, Check> | undefined;
@@ -45,6 +55,16 @@ export function CvText() {
         <p className="m-0 text-muted">
           The text below is in the order a browser reads it from the PDF. Many application portals read it the same way.
         </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={onDelete} disabled={del.isPending} className="text-warn-ink">
+            {del.isPending ? "Deleting…" : "Delete this CV"}
+          </Button>
+          {del.isError && (
+            <span role="alert" className="text-sm text-warn-ink">
+              {(del.error as Error).message}
+            </span>
+          )}
+        </div>
       </div>
 
       {checks && (

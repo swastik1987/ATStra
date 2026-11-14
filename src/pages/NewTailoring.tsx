@@ -29,9 +29,9 @@ function Choice(props: { checked: boolean; onChange: () => void; title: string; 
       )}
     >
       <input type="radio" name="cvsrc" checked={props.checked} onChange={props.onChange} className="mt-1 w-4 h-4 accent-accent" />
-      <span className="flex flex-col">
+      <span className="flex flex-col min-w-0">
         <span className="font-semibold">{props.title}</span>
-        <span className="text-sm text-muted">{props.note}</span>
+        <span className="text-sm text-muted [overflow-wrap:anywhere]">{props.note}</span>
       </span>
     </label>
   );

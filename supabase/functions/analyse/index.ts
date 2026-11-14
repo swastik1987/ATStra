@@ -91,6 +91,9 @@ Deno.serve(async (req) => {
           if (error) throw new Error(`Could not save suggestions: ${error.message}`);
           return (data as Suggestion[]).sort((a, b) => a.rank - b.rank);
         },
+        logFailure: async (code, promptVersion, detail) => {
+          console.error(JSON.stringify({ event: "analyse_failed", code, prompt_version: promptVersion, user_id: userId, detail: detail.slice(0, 500) }));
+        },
         save: async (id, values) => {
           const { error } = await supabase.from("applications").update(values).eq("id", id);
           if (error) throw new Error(`Could not save the analysis: ${error.message}`);

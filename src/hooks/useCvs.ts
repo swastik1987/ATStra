@@ -137,3 +137,17 @@ export function useRetryParse(promote: boolean, onStage: (s: UploadStage) => voi
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["cv"] }),
   });
 }
+
+export function useDeleteCv() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { deleteCv } = await import("@/lib/deleteFlows");
+      await deleteCv(supabase, id);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["cv"] });
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    },
+  });
+}

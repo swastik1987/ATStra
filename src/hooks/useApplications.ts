@@ -16,6 +16,7 @@ export interface ApplicationSummary {
   base_score: Score | null;
   status: Status;
   outcome: Outcome;
+  outcome_updated_at?: string | null;
   updated_at: string;
   /** Present on the list query: every export, for the "after" score and re-download (F3, F17). */
   exports?: { storage_path: string; final_score: { total: number } | null; created_at: string }[];
@@ -41,7 +42,7 @@ export function useApplications() {
     queryFn: async (): Promise<ApplicationSummary[]> => {
       const { data, error } = await supabase
         .from("applications")
-        .select("id, role_title, company, jd_source, base_score, status, outcome, updated_at, exports(storage_path, final_score, created_at)")
+        .select("id, role_title, company, jd_source, base_score, status, outcome, outcome_updated_at, updated_at, exports(storage_path, final_score, created_at)")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data as ApplicationSummary[];
@@ -153,4 +154,36 @@ export interface FetchedJd {
 
 export function useFetchJd() {
   return useMutation({ mutationFn: (url: string) => callFunction<FetchedJd>("fetch-jd", { url }) });
+}
+
+/** F19: saves the outcome at once; the database stamps outcome_updated_at. */
+export function useUpdateOutcome() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, outcome }: { id: string; outcome: Outcome }) => {
+      const { error } = await supabase.from("applications").update({ outcome }).eq("id", id);
+      if (error) throw new Error("Could not save the outcome. Try again.");
+    },
+    onMutate: async ({ id, outcome }) => {
+      await queryClient.cancelQueries({ queryKey: ["applications"] });
+      const previous = queryClient.getQueryData<ApplicationSummary[]>(["applications"]);
+      queryClient.setQueryData<ApplicationSummary[]>(["applications"], (list) => list?.map((a) => (a.id === id ? { ...a, outcome } : a)));
+      return { previous };
+    },
+    onError: (_e, _v, context) => {
+      if (context?.previous) queryClient.setQueryData(["applications"], context.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+  });
+}
+
+export function useDeleteApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { deleteApplication } = await import("@/lib/deleteFlows");
+      await deleteApplication(supabase, id);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+  });
 }
