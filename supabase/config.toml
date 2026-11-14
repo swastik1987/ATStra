@@ -437,3 +437,11 @@ enabled = true
 # The function verifies the caller with auth.getUser() itself (works with the new JWT
 # signing keys); the gateway check is off so the CORS preflight is not rejected.
 verify_jwt = false
+
+[functions.fetch-jd]
+enabled = true
+verify_jwt = false
+
+[functions.analyse]
+enabled = true
+verify_jwt = false

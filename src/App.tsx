@@ -5,6 +5,8 @@ import { SignIn } from "@/pages/SignIn";
 import { Placeholder } from "@/pages/Placeholder";
 import { Applications } from "@/pages/Applications";
 import { CvText } from "@/pages/CvText";
+import { NewTailoring } from "@/pages/NewTailoring";
+import { Analysis } from "@/pages/Analysis";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
@@ -19,8 +21,8 @@ export function App() {
           <Route element={<AppLayout />}>
             <Route index element={<Applications />} />
             <Route path="/cv/:id" element={<CvText />} />
-            <Route path="/new" element={<Placeholder title="New tailoring" note="Built in phase 2." />} />
-            <Route path="/applications/:id" element={<Placeholder title="Score and suggestions" note="Built in phase 3." />} />
+            <Route path="/new" element={<NewTailoring />} />
+            <Route path="/applications/:id" element={<Analysis />} />
             <Route path="/applications/:id/export" element={<Placeholder title="Export" note="Built in phase 4." />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

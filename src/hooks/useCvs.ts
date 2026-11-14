@@ -56,78 +56,84 @@ export class ParseFailedError extends Error {
 export type UploadStage = "reading" | "uploading" | "parsing";
 
 /**
- * Upload flow (CLAUDE.md F5, section 6 steps 1-2):
- * check size, extract text in the browser, reject scans before anything is saved,
- * upload, insert the row, run parse-cv, then make it the master CV.
- * If parsing fails the previous master stays in place and the new row can be retried.
+ * Checks size, extracts text in the browser, rejects scans before anything is saved,
+ * uploads the PDF and inserts the row (CLAUDE.md F5, section 6 step 1). Returns the CV id.
  */
-export function useUploadMasterCv(profileId: string | undefined, onStage: (s: UploadStage) => void) {
+async function storeCv(file: File, profileId: string | undefined, onStage: (s: UploadStage) => void): Promise<string> {
+  if (!profileId) throw new UploadError("Your profile is still loading. Try again in a moment.");
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    throw new UploadError("Choose a PDF file.");
+  }
+  if (file.size > MAX_PDF_BYTES) throw new UploadError("This PDF is larger than 5 MB. Export a smaller PDF and try again.");
+
+  onStage("reading");
+  let extraction;
+  try {
+    extraction = await extractPdfInBrowser(file);
+  } catch {
+    throw new UploadError("This file could not be read as a PDF.");
+  }
+  if (extraction.isScanned) throw new UploadError("This PDF looks scanned. Upload a text-based PDF.");
+
+  onStage("uploading");
+  const path = `${profileId}/${crypto.randomUUID()}.pdf`;
+  const up = await supabase.storage.from("cvs").upload(path, file, { contentType: "application/pdf" });
+  if (up.error) throw new UploadError("Upload failed. Try again.");
+  const row = await supabase
+    .from("cvs")
+    .insert({
+      profile_id: profileId,
+      file_name: file.name,
+      storage_path: path,
+      raw_text: extraction.text,
+      parse_checks: { page_count: extraction.pageCount, char_count: extraction.text.length, browser: extraction.checks },
+    })
+    .select("id")
+    .single();
+  if (row.error) {
+    await supabase.storage.from("cvs").remove([path]);
+    throw new UploadError("Could not save the CV. Try again.");
+  }
+  return row.data.id;
+}
+
+/** Runs parse-cv (section 6 step 2) and, for a master CV, makes it the master. */
+async function parseCv(cvId: string, promote: boolean, onStage: (s: UploadStage) => void) {
+  onStage("parsing");
+  try {
+    await callFunction("parse-cv", { cv_id: cvId });
+    if (promote) {
+      const { error } = await supabase.rpc("set_master_cv", { p_cv_id: cvId });
+      if (error) throw new UploadError("Parsed, but could not set it as your master CV. Try again.");
+    }
+  } catch (e) {
+    throw new ParseFailedError(cvId, e instanceof Error ? e.message : "Parsing failed. Try again.");
+  }
+}
+
+/**
+ * Upload and parse a CV. With `promote`, it becomes the master CV only after it parses,
+ * so a failed parse leaves the previous master in place; the row can be retried.
+ */
+export function useUploadCv(profileId: string | undefined, promote: boolean, onStage: (s: UploadStage) => void) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (file: File): Promise<string> => {
-      if (!profileId) throw new UploadError("Your profile is still loading. Try again in a moment.");
-      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-        throw new UploadError("Choose a PDF file.");
-      }
-      if (file.size > MAX_PDF_BYTES) throw new UploadError("This PDF is larger than 5 MB. Export a smaller PDF and try again.");
-
-      onStage("reading");
-      let extraction;
-      try {
-        extraction = await extractPdfInBrowser(file);
-      } catch {
-        throw new UploadError("This file could not be read as a PDF.");
-      }
-      if (extraction.isScanned) throw new UploadError("This PDF looks scanned. Upload a text-based PDF.");
-
-      onStage("uploading");
-      const path = `${profileId}/${crypto.randomUUID()}.pdf`;
-      const up = await supabase.storage.from("cvs").upload(path, file, { contentType: "application/pdf" });
-      if (up.error) throw new UploadError("Upload failed. Try again.");
-      const row = await supabase
-        .from("cvs")
-        .insert({
-          profile_id: profileId,
-          file_name: file.name,
-          storage_path: path,
-          raw_text: extraction.text,
-          parse_checks: { page_count: extraction.pageCount, char_count: extraction.text.length, browser: extraction.checks },
-        })
-        .select("id")
-        .single();
-      if (row.error) {
-        await supabase.storage.from("cvs").remove([path]);
-        throw new UploadError("Could not save the CV. Try again.");
-      }
-      try {
-        await parseAndPromote(row.data.id, onStage);
-      } catch (e) {
-        throw new ParseFailedError(row.data.id, e instanceof Error ? e.message : "Parsing failed. Try again.");
-      }
-      return row.data.id;
+      const id = await storeCv(file, profileId, onStage);
+      await parseCv(id, promote, onStage);
+      return id;
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["cv"] }),
   });
 }
 
-/** Runs parse-cv for a stored CV and makes it the master. Used for first try and retry. */
-export async function parseAndPromote(cvId: string, onStage: (s: UploadStage) => void) {
-  onStage("parsing");
-  await callFunction("parse-cv", { cv_id: cvId });
-  const { error } = await supabase.rpc("set_master_cv", { p_cv_id: cvId });
-  if (error) throw new UploadError("Parsed, but could not set it as your master CV. Try again.");
-}
+export const useUploadMasterCv = (profileId: string | undefined, onStage: (s: UploadStage) => void) =>
+  useUploadCv(profileId, true, onStage);
 
-export function useRetryParse(onStage: (s: UploadStage) => void) {
+export function useRetryParse(promote: boolean, onStage: (s: UploadStage) => void) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (cvId: string) => {
-      try {
-        await parseAndPromote(cvId, onStage);
-      } catch (e) {
-        throw new ParseFailedError(cvId, e instanceof Error ? e.message : "Parsing failed. Try again.");
-      }
-    },
+    mutationFn: (cvId: string) => parseCv(cvId, promote, onStage),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["cv"] }),
   });
 }

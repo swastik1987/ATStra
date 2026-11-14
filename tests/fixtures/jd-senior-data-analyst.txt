@@ -1,0 +1,30 @@
+Senior Data Analyst
+Tailwind Freight (synthetic posting for tests)
+Leeds, hybrid
+
+About Tailwind Freight
+Tailwind Freight runs same-day logistics for retailers across the north of England. Our data team turns delivery, warehouse and pricing data into decisions that operations and finance teams act on every week.
+
+The role
+We are hiring a Senior Data Analyst to own delivery performance reporting and support pricing decisions. You will build and maintain dbt models, design Looker dashboards, and present findings to operations leaders.
+
+What you will do
+- Own the on-time delivery and cost-per-drop metrics end to end, from SQL models to dashboards
+- Build and maintain data models in dbt on Snowflake
+- Design self-serve Looker dashboards for regional operations managers
+- Run A/B tests on routing and pricing changes and explain the results to non-technical stakeholders
+- Partner with finance on pricing analysis and forecasting
+- Mentor junior analysts and review their SQL
+
+What we are looking for (must have)
+- 5+ years in data analysis or analytics engineering
+- Expert SQL and solid Python
+- Hands-on experience with dbt and Looker (or a similar BI tool)
+- Experience with A/B testing and statistical significance
+- Strong stakeholder management and clear written communication
+- Background in logistics, supply chain or retail operations
+
+Nice to have
+- Snowflake
+- Forecasting methods
+- Experience mentoring analysts

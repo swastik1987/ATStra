@@ -1,5 +1,6 @@
 import { Link, useOutletContext } from "react-router-dom";
 import { MasterCvCard } from "@/components/MasterCvCard";
+import { ApplicationsTable } from "@/components/ApplicationsTable";
 import type { LayoutContext } from "@/components/AppLayout";
 
 export function Applications() {
@@ -21,9 +22,7 @@ export function Applications() {
         </Link>
       </div>
       <MasterCvCard profileId={profileId} />
-      <section aria-label="Applications" className="bg-surface border border-border rounded-[14px] p-6 text-muted">
-        No applications yet. The applications table arrives in phase 2.
-      </section>
+      <ApplicationsTable />
     </>
   );
 }

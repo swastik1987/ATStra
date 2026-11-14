@@ -22,7 +22,7 @@ export function MasterCvCard({ profileId }: { profileId: string | undefined }) {
   const input = useRef<HTMLInputElement>(null);
   const [stage, setStage] = useState<UploadStage | null>(null);
   const upload = useUploadMasterCv(profileId, setStage);
-  const retry = useRetryParse(setStage);
+  const retry = useRetryParse(true, setStage);
   const busy = upload.isPending || retry.isPending;
   // Show whichever action ran last.
   const error = (retry.error ?? upload.error) as Error | null;
