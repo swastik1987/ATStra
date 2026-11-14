@@ -37,9 +37,11 @@ This file is the complete specification. Decisions marked FIXED are not yours to
 | Type check | `npm run typecheck` |
 | Lint | `npm run lint` |
 | Build | `npm run build` (output `dist/`) |
-| Apply migrations | `supabase db push` |
+| Apply migrations | `supabase db push --remote` (CLI v3 targets a local stack without `--remote`; there is none here) |
 | Deploy functions | `supabase functions deploy <name>` |
 | Set model | `supabase secrets set MODEL_ID=<id>` |
+
+The Supabase CLI is a dev dependency: run it as `npx supabase …`. In Windows PowerShell use `npx.cmd` / `npm.cmd`, since script execution is disabled by default.
 
 ---
 
