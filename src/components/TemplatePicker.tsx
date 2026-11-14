@@ -11,7 +11,7 @@ const PT = 96 / 72;
 
 /** Registers the template font files once, so previews use the same faces as the DOCX. */
 const loaded = new Set<string>();
-function useTemplateFonts() {
+export function useTemplateFonts() {
   const [, setReady] = useState(0);
   useEffect(() => {
     if (typeof FontFace === "undefined") return;
@@ -69,7 +69,7 @@ function Heading({ t, text }: { t: CvTemplate; text: string }) {
   return <div style={{ ...base, paddingBottom: ruled ? 5 : 0, borderBottom: ruled ? `1px solid ${c.rule}` : "none" }}>{text}</div>;
 }
 
-function Preview({ t, cv, style }: { t: CvTemplate; cv: StructuredCv; style: Style }) {
+export function Preview({ t, cv, style }: { t: CvTemplate; cv: StructuredCv; style: Style }) {
   const c = t.colours;
   const banded = t.shading === "header";
   const label = (key: string) => style.heading_labels[key] ?? DEFAULT_LABELS[key] ?? key;
@@ -170,7 +170,7 @@ function Preview({ t, cv, style }: { t: CvTemplate; cv: StructuredCv; style: Sty
 }
 
 /** Scales a fixed-width preview to the width of its card. */
-function Scaled({ children }: { children: React.ReactNode }) {
+export function Scaled({ children }: { children: React.ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.3);
   useLayoutEffect(() => {
@@ -178,6 +178,7 @@ function Scaled({ children }: { children: React.ReactNode }) {
     if (!el) return;
     const update = () => setScale(el.clientWidth / SHEET_W);
     update();
+    if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();

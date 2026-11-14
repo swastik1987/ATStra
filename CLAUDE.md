@@ -1,4 +1,4 @@
-# CV Tailor
+# ATStra
 
 Web app for Gmail users (self sign-up). A user uploads a CV (PDF) and a job description (pasted text or link). The app scores the CV against that job, proposes evidence-backed edits one at a time, and exports the accepted edits as an editable single-column DOCX.
 

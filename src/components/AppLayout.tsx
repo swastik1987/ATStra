@@ -2,18 +2,20 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
 import { useSession } from "@/hooks/useSession";
 import { useProfile } from "@/hooks/useProfile";
+import { Landing } from "@/pages/Landing";
 
 export interface LayoutContext {
   profileId: string | undefined;
 }
 
-/** Signed-in shell: redirects to /signin when there is no session. */
+/** Signed-in shell. Signed out, the home page is the landing page; other paths go to /signin. */
 export function AppLayout() {
   const session = useSession();
   const location = useLocation();
   const profile = useProfile(session?.user.id);
 
   if (session === undefined) return <p className="p-8 text-muted">Loading…</p>;
+  if (session === null && location.pathname === "/") return <Landing />;
   if (session === null) return <Navigate to="/signin" replace state={{ from: location.pathname }} />;
 
   return (

@@ -49,3 +49,49 @@
     outline-offset: 2px;
   }
 }
+
+/* Landing page (signed-out home). Decorative backgrounds and motion; content never depends on them. */
+.landing-hero-bg {
+  background:
+    radial-gradient(600px 380px at 85% 20%, rgba(29, 79, 216, 0.16), transparent 70%),
+    radial-gradient(520px 340px at 5% 90%, rgba(157, 183, 255, 0.28), transparent 70%),
+    radial-gradient(circle at 1px 1px, rgba(20, 24, 31, 0.07) 1px, transparent 0) 0 0 / 22px 22px,
+    linear-gradient(180deg, #f7f9ff 0%, #ffffff 100%);
+}
+.landing-dark-bg {
+  background:
+    radial-gradient(520px 360px at 90% 10%, rgba(29, 79, 216, 0.55), transparent 70%),
+    radial-gradient(420px 300px at 0% 100%, rgba(99, 102, 241, 0.3), transparent 70%);
+}
+.landing-cta-bg {
+  background:
+    radial-gradient(480px 300px at 100% 0%, rgba(157, 183, 255, 0.45), transparent 70%),
+    radial-gradient(420px 280px at 0% 100%, rgba(22, 59, 163, 0.9), transparent 70%);
+}
+.landing-underline {
+  background: linear-gradient(transparent 72%, rgba(29, 79, 216, 0.16) 72%, rgba(29, 79, 216, 0.16) 94%, transparent 94%);
+  border-radius: 4px;
+}
+@keyframes landing-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes landing-ring {
+  from { stroke-dasharray: 0 999; }
+}
+@keyframes landing-bar {
+  from { width: 0; }
+}
+@keyframes landing-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(29, 79, 216, 0.5); }
+  80%, 100% { box-shadow: 0 0 0 8px rgba(29, 79, 216, 0); }
+}
+.landing-float { animation: landing-float 6s ease-in-out infinite; }
+.landing-ring { animation: landing-ring 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.landing-bar { animation: landing-bar 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both 0.3s; }
+.landing-pulse { animation: landing-pulse 2s ease-out infinite; }
+.landing { scroll-behavior: smooth; }
+.landing h2[id] { scroll-margin-top: 120px; }
+@media (prefers-reduced-motion: reduce) {
+  .landing-float, .landing-ring, .landing-bar, .landing-pulse { animation: none; }
+}

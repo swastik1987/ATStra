@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /applications/
+Disallow: /new
+Disallow: /cv/
+
+Sitemap: https://atstra.pages.dev/sitemap.xml

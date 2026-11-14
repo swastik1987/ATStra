@@ -272,7 +272,7 @@ export function buildCvDocument(cv: StructuredCv, style: Style, opts: BuildOptio
 
   const body = { font: font(t.fonts.body), size: pt(t.sizes.body), color: hex(t.colours.text) };
   return new Document({
-    creator: "CV Tailor",
+    creator: "ATStra",
     title: opts.title ?? (cv.contact.name ? `${cv.contact.name} CV` : "CV"),
     fonts: opts.fonts?.map((f) => ({
       name: f.family,

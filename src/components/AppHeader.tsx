@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/brand/Logo";
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   cn(
@@ -21,8 +22,8 @@ export function AppHeader({ displayName }: { displayName: string }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 px-4 sm:px-8 py-3.5 bg-surface border-b border-border">
       <div className="flex flex-wrap items-center gap-4 sm:gap-7">
-        <Link to="/" className="font-heading font-bold text-xl text-ink no-underline hover:text-ink">
-          CV Tailor
+        <Link to="/" aria-label="ATStra home" className="inline-flex items-center min-h-11 no-underline">
+          <Logo />
         </Link>
         <nav aria-label="Main" className="flex gap-1">
           <NavLink to="/" end className={navClass}>

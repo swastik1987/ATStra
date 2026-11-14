@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
-import { SignIn } from "@/pages/SignIn";
+import { Landing } from "@/pages/Landing";
 import { Applications } from "@/pages/Applications";
 import { CvText } from "@/pages/CvText";
 import { NewTailoring } from "@/pages/NewTailoring";
@@ -21,7 +21,7 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signin" element={<Landing />} />
           {PhonePreview && (
             <Route
               path="/__preview/*"
