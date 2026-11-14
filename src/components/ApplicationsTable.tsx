@@ -1,5 +1,31 @@
 import { Link } from "react-router-dom";
-import { useApplications, type Outcome, type Status } from "@/hooks/useApplications";
+import { useState } from "react";
+import { latestExport, useApplications, type Outcome, type Status } from "@/hooks/useApplications";
+import { downloadExport } from "@/hooks/useExports";
+
+/** F17: re-download the last export through a 60-second signed URL. */
+function DownloadLink({ path, label }: { path: string; label: string }) {
+  const [state, setState] = useState<"idle" | "busy" | "error">("idle");
+  return (
+    <button
+      type="button"
+      className="inline-flex items-center min-h-11 font-semibold text-accent bg-transparent cursor-pointer hover:text-accent-ink"
+      disabled={state === "busy"}
+      onClick={async () => {
+        setState("busy");
+        try {
+          await downloadExport(path);
+          setState("idle");
+        } catch {
+          setState("error");
+        }
+      }}
+    >
+      {state === "error" ? "Retry download" : "Download"}
+      <span className="sr-only"> last export for {label}</span>
+    </button>
+  );
+}
 
 const STATUS_LABEL: Record<Status, string> = { draft: "Draft", reviewing: "Reviewing", exported: "Exported" };
 const OUTCOME_LABEL: Record<Outcome, string> = {
@@ -57,6 +83,13 @@ export function ApplicationsTable() {
                   <>
                     <span className="font-semibold">{a.base_score.total}</span>
                     <span className="text-muted"> before</span>
+                    {latestExport(a)?.final_score && (
+                      <>
+                        <span className="text-muted"> · </span>
+                        <span className="font-semibold">{latestExport(a)!.final_score!.total}</span>
+                        <span className="text-muted"> after</span>
+                      </>
+                    )}
                   </>
                 ) : (
                   <span className="text-muted">Not scored</span>
@@ -66,9 +99,12 @@ export function ApplicationsTable() {
               <td className={td}>{OUTCOME_LABEL[a.outcome]}</td>
               <td className={`${td} whitespace-nowrap`}>{new Date(a.updated_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</td>
               <td className={td}>
-                <Link to={`/applications/${a.id}`} className="font-semibold">
-                  Open<span className="sr-only"> {a.role_title}</span>
-                </Link>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <Link to={`/applications/${a.id}`} className="font-semibold">
+                    Open<span className="sr-only"> {a.role_title}</span>
+                  </Link>
+                  {latestExport(a) && <DownloadLink path={latestExport(a)!.storage_path} label={a.role_title} />}
+                </div>
               </td>
             </tr>
           ))}

@@ -17,6 +17,13 @@ export interface ApplicationSummary {
   status: Status;
   outcome: Outcome;
   updated_at: string;
+  /** Present on the list query: every export, for the "after" score and re-download (F3, F17). */
+  exports?: { storage_path: string; final_score: { total: number } | null; created_at: string }[];
+}
+
+/** The most recent export of an application, if any. */
+export function latestExport(a: ApplicationSummary) {
+  return [...(a.exports ?? [])].sort((x, y) => y.created_at.localeCompare(x.created_at))[0];
 }
 
 export interface ApplicationDetail extends ApplicationSummary {
@@ -25,7 +32,7 @@ export interface ApplicationDetail extends ApplicationSummary {
   jd_text: string | null;
   jd_terms: JdTerm[] | null;
   prompt_version: string | null;
-  cvs: Pick<CvRecord, "id" | "file_name" | "structured" | "parse_checks" | "is_master"> | null;
+  cvs: Pick<CvRecord, "id" | "file_name" | "structured" | "style" | "parse_checks" | "is_master"> | null;
 }
 
 export function useApplications() {
@@ -34,7 +41,7 @@ export function useApplications() {
     queryFn: async (): Promise<ApplicationSummary[]> => {
       const { data, error } = await supabase
         .from("applications")
-        .select("id, role_title, company, jd_source, base_score, status, outcome, updated_at")
+        .select("id, role_title, company, jd_source, base_score, status, outcome, updated_at, exports(storage_path, final_score, created_at)")
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data as ApplicationSummary[];
@@ -50,7 +57,7 @@ export function useApplication(id: string | undefined) {
       const { data, error } = await supabase
         .from("applications")
         .select(
-          "id, role_title, company, jd_source, jd_url, jd_text, jd_terms, base_score, status, outcome, updated_at, prompt_version, cv_id, cvs(id, file_name, structured, parse_checks, is_master)",
+          "id, role_title, company, jd_source, jd_url, jd_text, jd_terms, base_score, status, outcome, updated_at, prompt_version, cv_id, cvs(id, file_name, structured, style, parse_checks, is_master)",
         )
         .eq("id", id!)
         .single();

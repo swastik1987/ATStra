@@ -143,8 +143,8 @@ export function Analysis() {
                     </div>
                     <div className="text-sm text-muted">Open and skipped suggestions are left out of the export. You can come back and change them.</div>
                   </div>
-                  <Button variant="primary" size="lg" disabled title="The DOCX export arrives in the next phase">
-                    Generate DOCX
+                  <Button variant="primary" size="lg" asChild>
+                    <Link to={`/applications/${a.id}/export`}>Generate DOCX</Link>
                   </Button>
                 </section>
               )}

@@ -209,6 +209,28 @@ describe.skipIf(!enabled)("auth and row-level security", () => {
     await a.client.rpc("set_master_cv", { p_cv_id: ids.cv });
   });
 
+  it("exports: the owner uploads a DOCX, records it, and re-downloads it through a 60-second signed URL", async () => {
+    const path = `${a.profileId}/${ids.app}/rls-test.docx`;
+    const docxType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const body = new Blob(["PK synthetic docx"], { type: docxType });
+    const up = await a.client.storage.from("exports").upload(path, body, { contentType: docxType });
+    expect(up.error).toBeNull();
+    const row = await a.client
+      .from("exports")
+      .insert({ application_id: ids.app, storage_path: path, final_score: { total: 70 }, applied_suggestion_ids: [ids.suggestion] })
+      .select("id")
+      .single();
+    expect(row.error).toBeNull();
+    const signed = await a.client.storage.from("exports").createSignedUrl(path, 60);
+    expect(signed.error).toBeNull();
+    const res = await fetch(signed.data!.signedUrl);
+    expect(res.ok).toBe(true);
+    expect(await res.text()).toBe("PK synthetic docx");
+    const theirs = await b.client.storage.from("exports").createSignedUrl(path, 60);
+    expect(theirs.error).not.toBeNull();
+    await admin.storage.from("exports").remove([path]);
+  });
+
   it("only one master CV per profile", async () => {
     const dup = await a.client.from("cvs").insert({ profile_id: a.profileId, file_name: "b.pdf", storage_path: `${a.profileId}/b.pdf`, is_master: true });
     expect(dup.error).not.toBeNull();
