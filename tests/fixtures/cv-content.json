@@ -1,0 +1,49 @@
+{
+  "_note": "Synthetic person. Not a real CV. Shared by the single-column and two-column fixtures.",
+  "name": "Alex Morgan",
+  "contact": ["alex.morgan.fixture@example.com", "+44 7700 900123", "Leeds, UK", "linkedin.com/in/alex-morgan-fixture"],
+  "headline": "Senior Data Analyst",
+  "summary": "Data analyst with eight years of experience turning messy operational data into reporting that product and finance teams use every week. Comfortable owning a metric end to end, from SQL pipelines to the dashboard and the meeting where it gets discussed.",
+  "experience": [
+    {
+      "company": "Northwind Logistics",
+      "title": "Senior Data Analyst",
+      "location": "Leeds",
+      "start": "Mar 2021",
+      "end": "Present",
+      "bullets": [
+        "Built the weekly delivery performance dashboard in Looker used by 40 regional managers",
+        "Rewrote the on-time delivery metric in dbt, cutting monthly reconciliation from three days to four hours",
+        "Led a pricing analysis that informed new surcharge bands for rural routes",
+        "Mentored two junior analysts through their first production SQL models"
+      ]
+    },
+    {
+      "company": "Fabrikam Retail",
+      "title": "Data Analyst",
+      "location": "Manchester",
+      "start": "Jun 2018",
+      "end": "Feb 2021",
+      "bullets": [
+        "Owned the stock availability report for 120 stores and its daily refresh",
+        "Automated supplier scorecards in Python, replacing a manual spreadsheet process",
+        "Partnered with merchandising to test promotion layouts across a store sample"
+      ]
+    },
+    {
+      "company": "Contoso Insurance",
+      "title": "Reporting Analyst",
+      "location": "York",
+      "start": "Sep 2016",
+      "end": "May 2018",
+      "bullets": [
+        "Maintained claims reporting in SQL Server for the operations team",
+        "Documented data definitions for the first company data dictionary"
+      ]
+    }
+  ],
+  "education": [
+    { "institution": "University of Sheffield", "degree": "BSc Mathematics", "start": "2013", "end": "2016" }
+  ],
+  "skills": ["SQL", "Python", "dbt", "Looker", "Excel", "Stakeholder management"]
+}

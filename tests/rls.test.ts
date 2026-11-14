@@ -173,6 +173,23 @@ describe.skipIf(!enabled)("auth and row-level security", () => {
     expect(signed.error).not.toBeNull();
   });
 
+  it("set_master_cv swaps the master atomically, and only for the owner", async () => {
+    const second = await a.client
+      .from("cvs")
+      .insert({ profile_id: a.profileId, file_name: "new.pdf", storage_path: `${a.profileId}/new.pdf`, is_master: false })
+      .select("id")
+      .single();
+    expect(second.error).toBeNull();
+    const denied = await b.client.rpc("set_master_cv", { p_cv_id: second.data!.id });
+    expect(denied.error).not.toBeNull();
+    const ok = await a.client.rpc("set_master_cv", { p_cv_id: second.data!.id });
+    expect(ok.error).toBeNull();
+    const masters = await a.client.from("cvs").select("id").eq("is_master", true);
+    expect(masters.data).toEqual([{ id: second.data!.id }]);
+    // Restore the original master for the next test.
+    await a.client.rpc("set_master_cv", { p_cv_id: ids.cv });
+  });
+
   it("only one master CV per profile", async () => {
     const dup = await a.client.from("cvs").insert({ profile_id: a.profileId, file_name: "b.pdf", storage_path: `${a.profileId}/b.pdf`, is_master: true });
     expect(dup.error).not.toBeNull();
